@@ -1,0 +1,74 @@
+General Automated GUI Documentation
+
+Set Directory with Experiment Data (static text box)
+Panel 1: Control Automated Post Processing Analysis
+    Scheduling Time (text box (editable))
+    Start/Stop buttons
+Panel 2: Control Automated Contingency Selection
+    Enable/Disable
+    Select which to pick - Threshold/Hold Time
+
+Up to 8 boxes - so 8 panels
+Panel 3: Current Contigency Information:
+    Threshold (static text):
+    Hold Time (static text):
+    Center Hold Threshold (static text):
+    Sector: Convert from -180 -> 180 to 0 -> 360
+Panel 3-1
+Panel 3-2
+Panel 3-3
+Panel 3-4
+Panel 3-5
+Panel 3-6
+Panel 3-7
+Panel 3-8
+
+Panel 4
+Update Contingency Information:
+Reward Percentage: 25
+Each panel 4-i
+Either threshold/hold time altered by analysis
+Threshold (edittext): Previous Day
+Hold Time (edittext): Previous Day
+Sector Convert from 0->360 to -180-180;
+Panel 4-1
+...
+Panel 4-8
+
+Issues that have come up:
+Where does it make sense to store contingency information - only in the jstruct?
+    Probably not - need it in stats structure as well.
+    Jstruct can have contingency information all the time too 
+    Store stats info:
+How to decide number of days for contingency selection - 1 day in advance
+
+Contingency Format for any Arbitrary Box:
+Location - old contingency:
+expt_dir\Box_i\Archived\contingency_mm_dd_yyyy_HH_MM.txt
+Location - current:
+expt_dir\Box_i\contingency.txt
+Format
+-----------------------------------
+Threshold\tValue
+Hold Duration\tValue
+Center Hold Threshold\tValue
+Min Angle\tValue
+Max Angle\tValue
+------------------------------------
+Note that Center Threshold doesn't change- it's there to ensure mouse isn't
+starting trial with joystick very far out.
+Labview - GUI:
+Threshold - Threshold
+Hold Duration - Hold Time
+Center Hold Threshold - Hold Threshold
+Min Angle - Min Angle
+Max Angle - Max Angle
+
+
+
+
+
+
+
+
+
