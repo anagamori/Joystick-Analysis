@@ -1,0 +1,91 @@
+
+
+data_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\Data\Box_2_F_081920_CT\072621_60_100_050_000_360_000_360_00';
+cd(data_folder)
+load('jstruct')
+cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
+
+nTrial = length(jstruct);
+
+Fs = 1000;
+[b,a] = butter(4,20/(Fs*2),'low');
+index_reward = [];
+        
+for i = 1:nTrial
+    if ~isempty(jstruct(i).reward_onset)
+        index_reward = [index_reward i];
+    end
+end
+
+hold_threshold = 50/100*6.35;
+outer_threshold = 60/100*6.35;
+max_distance = 90/100*6.35;
+theta = 0:0.01:2*pi;
+%%
+for j = 1 %:length(index_reward) %1:50 %3:32
+    
+    
+    
+    n = index_reward(j);
+    traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);
+    traj_y = filtfilt(b,a,jstruct(n).traj_y/100*6.35);
+    reward_vec = zeros(1,length(traj_x));
+    reward_vec(jstruct(n).reward_onset) = 1;
+    js_reward = find(jstruct(n).js_reward==1); %joystick contact for which reward was given 
+    onset_js = jstruct(n).js_pairs_r(js_reward,1);
+    offset_js = jstruct(n).js_pairs_r(js_reward,2);
+    
+    for k = 1 %:length(js_reward)
+        a_diff = find(jstruct(n).np_pairs(:,1)-onset_js(k)<0);
+    
+        onset_np = jstruct(n).np_pairs(a_diff(end),1);
+        offset_np = jstruct(n).np_pairs(a_diff(end),2);
+
+        time = [1:offset_js(k)-onset_js(k)+1]./Fs;
+        
+        figure(1)
+        subplot(4,1,1)
+        plot(time,traj_x(onset_js(k):offset_js(k)),'LineWidth',1)
+        ylabel('x-position (mm)')
+        set(gca,'TickDir','out');
+        set(gca,'box','off')
+        hold on 
+        subplot(4,1,2)
+        plot(time,traj_y(onset_js(k):offset_js(k)),'LineWidth',1)
+        xlabel('Time (s)')
+        ylabel('y-position (mm)')
+        set(gca,'TickDir','out');
+        set(gca,'box','off')
+        hold on
+        subplot(4,1,3)
+        plot(time,sqrt(traj_x(onset_js(k):offset_js(k)).^2+traj_y(onset_js(k):offset_js(k)).^2),'LineWidth',1)
+        hold on 
+        plot([time(0) time(end)],[hold_threshold outer_threshold],'color','g','LineWidth',1)
+        plot([time(0) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
+        plot([time(0) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
+        ylabel('radial distance (mm)')
+        set(gca,'TickDir','out');
+        set(gca,'box','off')
+        subplot(4,1,4)
+        plot(time,reward_vec(onset_js(k):offset_js(k)),'LineWidth',1)
+        ylabel('Reward')
+        set(gca,'TickDir','out');
+        set(gca,'box','off')
+        
+        figure(2)
+        plot(traj_x(onset_js(k):offset_js(k)),traj_y(onset_js(k):offset_js(k)),'LineWidth',1)
+        xlabel('x-position (mm)')
+        ylabel('y-position (mm)')
+        xlim([-6.35 6.35])
+        ylim([-6.35 6.35])
+        %axis equal
+        set(gca,'TickDir','out')
+        set(gca,'box','off')
+        hold on
+        plot(hold_threshold*cos(theta),hold_threshold*sin(theta),'--','color','k')
+        plot(outer_threshold*cos(theta),outer_threshold*sin(theta),'color','g')
+        plot(max_distance*cos(theta),max_distance*sin(theta),'color','g')
+    end
+end
+
+

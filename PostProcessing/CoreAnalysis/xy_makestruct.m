@@ -91,12 +91,12 @@ k = 1;for i=1:length(filelist)
   % Mark rewarded joystick deflections
     for j=1:length(reward_on)
         if numel(js_r>0)
-            a = find(((reward_on(j)-js_r(:,2))<0)&((reward_on(j)-js_r(:,1))>0));
+            a = find(((reward_on(j)-js_r(:,2))<0)&((reward_on(j)-js_r(:,1))>0)); % incidences when reward occurred after joystick touch sensor came on and before joystick touch sensor became off 
             if numel(a)>0
                 js_reward(a) = 1;
-            else
+            else 
                 diff_a = (reward_on(j)-js_r(:,2));
-                diff_a = diff_a(diff_a>0);
+                diff_a = diff_a(diff_a>0); % when reward occurred before joystick touch came off
                 a = (diff_a==min(diff_a));
                 js_reward(a) = 1;
             end
