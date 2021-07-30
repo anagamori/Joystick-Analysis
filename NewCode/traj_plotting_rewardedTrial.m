@@ -2,7 +2,7 @@
 clear all
 clc
 
-data_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\Data\Box_2_F_081920_CT\072321_60_100_050_000_360_000_360_00';
+data_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\Data\Box_3_F_102320_CT\072921_30_100_030_000_360_000_360_00';
 % 072321_60_100_050_000_360_000_360_00
 % 072521_60_100_050_000_360_000_360_00
 % 072621_60_100_050_000_360_000_360_00
@@ -23,9 +23,9 @@ for i = 1:nTrial
     end
 end
 
-hold_threshold = 50/100*6.35;
-outer_threshold = 60/100*6.35;
-max_distance = 90/100*6.35;
+hold_threshold = 30/100*6.35;
+outer_threshold = 30/100*6.35;
+max_distance = 110/100*6.35;
 theta = 0:0.01:2*pi;
 %%
 for j = 1:length(index_reward) %1:50 %3:32
@@ -53,35 +53,35 @@ for j = 1:length(index_reward) %1:50 %3:32
         radial_position = sqrt(traj_x.^2+traj_y.^2);
         
         
-%         figure(1)
-%         subplot(4,1,1)
-%         plot(time,traj_x(start_time:end_time),'LineWidth',1)
-%         ylabel('x-position (mm)')
-%         set(gca,'TickDir','out');
-%         set(gca,'box','off')
-%         hold on 
-%         subplot(4,1,2)
-%         plot(time,traj_y(start_time:end_time),'LineWidth',1)
-%         xlabel('Time (s)')
-%         ylabel('y-position (mm)')
-%         set(gca,'TickDir','out');
-%         set(gca,'box','off')
-%         hold on
-%         subplot(4,1,3)
-%         plot(time,radial_position(start_time:end_time),'LineWidth',1)
-%         hold on 
-%         plot([time(1) time(end)],[hold_threshold hold_threshold],'--','color','k','LineWidth',1)
-%         plot([time(1) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
-%         plot([time(1) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
-%         ylabel('radial distance (mm)')
-%         set(gca,'TickDir','out');
-%         set(gca,'box','off')
-%         subplot(4,1,4)
-%         plot(time,reward_vec(start_time:end_time),'LineWidth',1)
-%         ylabel('Reward')
-%         set(gca,'TickDir','out');
-%         set(gca,'box','off')
-%         hold on 
+        figure(1)
+        subplot(4,1,1)
+        plot(time,traj_x(start_time:end_time),'LineWidth',1)
+        ylabel('x-position (mm)')
+        set(gca,'TickDir','out');
+        set(gca,'box','off')
+        hold on 
+        subplot(4,1,2)
+        plot(time,traj_y(start_time:end_time),'LineWidth',1)
+        xlabel('Time (s)')
+        ylabel('y-position (mm)')
+        set(gca,'TickDir','out');
+        set(gca,'box','off')
+        hold on
+        subplot(4,1,3)
+        plot(time,radial_position(start_time:end_time),'LineWidth',1)
+        hold on 
+        plot([time(1) time(end)],[hold_threshold hold_threshold],'--','color','k','LineWidth',1)
+        plot([time(1) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
+        plot([time(1) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
+        ylabel('radial distance (mm)')
+        set(gca,'TickDir','out');
+        set(gca,'box','off')
+        subplot(4,1,4)
+        plot(time,reward_vec(start_time:end_time),'LineWidth',1)
+        ylabel('Reward')
+        set(gca,'TickDir','out');
+        set(gca,'box','off')
+        hold on 
 %         
 %         figure(2)
 %         plot(traj_x(start_time:end_time),traj_y(start_time:end_time),'LineWidth',1)
