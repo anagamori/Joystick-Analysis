@@ -2,11 +2,11 @@ close all
 clear all
 clc
 
-data_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\Data\Box_3_F_102320_CT\080221_60_100_030_000_360_000_360_00';
-% 072321_60_100_050_000_360_000_360_00
-% 072521_60_100_050_000_360_000_360_00
-% 072621_60_100_050_000_360_000_360_00
-cd(data_folder)
+data_folder = 'D:\JoystickExpts\data\';
+mouse_ID = 'Box_2_F_081920_CT'; 
+data_ID = '080521_60_100_030_000_360_000_360_00';
+
+cd([data_folder mouse_ID '\' data_ID])
 load('jstruct')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
@@ -30,7 +30,7 @@ outer_threshold = 60/100*6.35;
 max_distance = 80/100*6.35;
 theta = 0:0.01:2*pi;
 %%
-for j = 2 %1:length(index_reward) %1:50 %3:32
+for j = length(index_reward) %1:50 %3:32
     
     n = index_reward(j);
     traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);
@@ -215,10 +215,10 @@ for j = 2 %1:length(index_reward) %1:50 %3:32
 end
 
 %%
-figure(11)
-histogram(max_radial_position,[0:6.35/50:6.35])
-hold on 
-line([outer_threshold, outer_threshold], ylim, 'LineWidth', 2, 'Color', 'r');
-line([max_distance, max_distance], ylim, 'LineWidth', 2, 'Color', 'r');
-
+% figure(11)
+% histogram(max_radial_position,[0:6.35/50:6.35])
+% hold on
+% line([outer_threshold, outer_threshold], ylim, 'LineWidth', 2, 'Color', 'r');
+% line([max_distance, max_distance], ylim, 'LineWidth', 2, 'Color', 'r');
 % 
+% %
