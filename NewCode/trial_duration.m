@@ -10,8 +10,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_3_F_102320_CT';
-data_ID = '081421_60_80_100_0250_010_010_000_360_000_360_000';
+mouse_ID = 'Box_2_F_081920_CT';
+data_ID = '081721_60_80_100_0225_010_010_000_360_000_360_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -21,7 +21,7 @@ cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 plotOpt = 1;
 
 nTrial = length(jstruct);
-max_radial_position = []; %zeros(1,length(js_reward));
+
 trial_dur = [];
 hold_duration = [];
 hold_target_duration = [];
@@ -85,24 +85,13 @@ for j = 1:length(index_reward) %1:50 %3:32
         zx_hold_threshold = zci(radial_position(start_time:end_time) - hold_threshold);
         zx_target_threshold = zci(radial_position(start_time:end_time) - outer_threshold);
         
-%         figure(k)
-%         plot(time,radial_position(start_time:end_time))
-%         hold on 
-%         plot(time(zx_hold_threshold),radial_position(start_time+zx_hold_threshold),'o','color','k')
-%         plot(time(zx_target_threshold),radial_position(start_time+zx_target_threshold),'o','color','r')
-%         plot([time(1) time(end)],[hold_threshold hold_threshold],'--','color','k','LineWidth',1)
-%         plot([time(1) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
-%         plot([time(1) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
-        
         if ~isempty(zx_hold_threshold) 
             if zx_hold_threshold(1) < zx_target_threshold(1)
                 hold_duration = [hold_duration zx_hold_threshold(1)];
                 hold_target_duration = [hold_target_duration zx_target_threshold(1) - zx_hold_threshold(1)];
             end
         end
-        max_radial_position = [max_radial_position max(radial_position(start_time:onset_reward(k)))]; %[max_radial_position max(radial_position(onset_reward(k)))];
-        %[max_radial_position(k),loc] = max(radial_position(start_time:end_time));
-        
+ 
     end
 end
 

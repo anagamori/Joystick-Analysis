@@ -4,14 +4,14 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_2_F_081920_CT';
-data_ID = '081721_60_80_100_0225_010_010_000_360_000_360_000';
+data_ID = '081621_60_80_100_0250_010_010_000_360_000_360_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
 load('jstruct')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
-plotOpt = 1;
+plotOpt = 0;
 
 nTrial = length(jstruct);
 max_radial_position = []; %zeros(1,length(js_reward));
@@ -47,7 +47,8 @@ for j = 1:length(index_reward) %1:50 %3:32
     acc_y = [0 diff(vel_y)*Fs];
     RoC = (vel_x.^2 + vel_y.^2).^(3/2)./abs(vel_x.*acc_y-vel_y.*acc_x);
     radial_position = sqrt(traj_x.^2+traj_y.^2);
-    radial_vel = sqrt(vel_x.^2+vel_y.^2);
+    
+    radial_vel = (traj_x.*vel_x + traj_y.*vel_y)./radial_position;
     radial_vel_2 = [0 diff(radial_position)*Fs];
     radial_acc = sqrt(acc_x.^2+acc_y.^2);
     radial_acc_2 = [0 diff(radial_vel_2)*Fs];
@@ -56,7 +57,7 @@ for j = 1:length(index_reward) %1:50 %3:32
     onset_js = jstruct(n).js_pairs_r(js_reward,1);
     offset_js = jstruct(n).js_pairs_r(js_reward,2);
     
-    for k = 1:length(js_reward)
+    for k = 1 %:length(js_reward)
         
         % Extract data within a trial
         trial_start_time = onset_js(k)-0.05*Fs;
@@ -67,7 +68,7 @@ for j = 1:length(index_reward) %1:50 %3:32
         RoC_trial = RoC(trial_start_time:trial_start_time + trial_duration + 0.1*Fs); 
         
         % Find local minima in radial velocity and RoC
-        [min_vel,loc_vel] = findpeaks(-radial_vel_trial);
+        [min_vel,loc_vel] = findpeaks(-abs(radial_vel_trial));
         [min_RoC,loc_RoC] = findpeaks(-RoC_trial);
         
         % Find local minima in RoC that coincided (within 2 ms difference) with local minima in
@@ -107,14 +108,12 @@ for j = 1:length(index_reward) %1:50 %3:32
                 figure()
                 subplot(3,1,1)
                 plot(time,traj_x(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-                xlim([time(1),time(end)])
                 ylabel('x-position (mm)')
                 set(gca,'TickDir','out');
                 set(gca,'box','off')
                 hold on
                 subplot(3,1,2)
-                plot(time,traj_y(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-                xlim([time(1),time(end)])
+                plot(time,traj_y(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)              
                 xlabel('Time (s)')
                 ylabel('y-position (mm)')
                 set(gca,'TickDir','out');
@@ -126,7 +125,6 @@ for j = 1:length(index_reward) %1:50 %3:32
                 plot([time(1) time(end)],[hold_threshold hold_threshold],'--','color','k','LineWidth',1)
                 plot([time(1) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
                 plot([time(1) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
-                xlim([time(1),time(end)])
                 ylabel('radial distance (mm)')
                 set(gca,'TickDir','out');
                 set(gca,'box','off')
@@ -138,7 +136,6 @@ for j = 1:length(index_reward) %1:50 %3:32
                 plot([time(1) time(end)],[hold_threshold hold_threshold],'--','color','k','LineWidth',1)
                 plot([time(1) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
                 plot([time(1) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
-                xlim([time(1),time(end)])
                 ylabel('Radial Position (mm)')
                 set(gca,'TickDir','out');
                 set(gca,'box','off')
