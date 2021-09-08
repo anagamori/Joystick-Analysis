@@ -18,7 +18,10 @@ max_radial_position = []; %zeros(1,length(js_reward));
 peak_vel = [];
 
 Fs = 1000;
-[b,a] = butter(4,50/(Fs*2),'low');
+d = fdesign.lowpass('N,F3db',8, 50, 1000);
+hd = design(d, 'butter');
+
+[b,a] = butter(8,50/(Fs*2),'low');
 index_reward = [];
 index_validTrial = [];
 
@@ -36,13 +39,13 @@ trial_duration = str2double(condition_array{5});
 
 theta = 0:0.01:2*pi;
 %%
-for j = 1:length(index_reward) %1:50 %3:32
+for j = 1 %:length(index_reward) %1:50 %3:32
     
     n = index_reward(j);
-    traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);
+    traj_x = filter(hd,jstruct(n).traj_x/100*6.35);
     vel_x = [0 diff(traj_x)*Fs];
     acc_x = [0 diff(vel_x)*Fs];
-    traj_y = filtfilt(b,a,jstruct(n).traj_y/100*6.35);
+    traj_y = filter(hd,jstruct(n).traj_y/100*6.35);
     vel_y = [0 diff(traj_y)*Fs];
     acc_y = [0 diff(vel_y)*Fs];
     RoC = (vel_x.^2 + vel_y.^2).^(3/2)./abs(vel_x.*acc_y-vel_y.*acc_x);
@@ -57,7 +60,7 @@ for j = 1:length(index_reward) %1:50 %3:32
     onset_js = jstruct(n).js_pairs_r(js_reward,1);
     offset_js = jstruct(n).js_pairs_r(js_reward,2);
     
-    for k = 1 %:length(js_reward)
+    for k = 1:length(js_reward)
         
         % Extract data within a trial
         trial_start_time = onset_js(k)-0.05*Fs;
@@ -75,8 +78,8 @@ for j = 1:length(index_reward) %1:50 %3:32
         % radial velocity
         A = repmat(loc_RoC',[1 length(loc_vel)]);
         [minValue,closestIndex] = min(abs(A-loc_vel),[],1);        
-        loc_vel(minValue>10) = [];
-        closestIndex(minValue>10) = [];
+        loc_vel(minValue>5) = [];
+        closestIndex(minValue>5) = [];
         
         % Find velocity peaks 
         [max_vel,loc_max_vel] = findpeaks(radial_vel_trial);

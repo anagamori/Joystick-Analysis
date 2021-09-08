@@ -4,7 +4,7 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_2_F_081920_CT';
-data_ID = '081621_60_80_100_0250_010_010_000_360_000_360_000';
+data_ID = '083021_60_80_100_0250_010_010_000_360_000_360_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -17,6 +17,8 @@ nTrial = length(jstruct);
 max_radial_position = []; %zeros(1,length(js_reward));
 
 Fs = 1000;
+d = fdesign.lowpass('N,F3db',8, 50, 1000);
+hd = design(d, 'butter');
 [b,a] = butter(4,50/(Fs*2),'low');
 index_reward = [];
 
@@ -34,18 +36,27 @@ trial_duration = str2double(condition_array{5});
 
 theta = 0:0.01:2*pi;
 %%
-for j = 1 %:length(index_reward) %1:50 %3:32
+for j = 2 %:length(index_reward) %1:50 %3:32
     
     n = index_reward(j);
-    traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);
+    %traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);
+    traj_x = filter(hd,jstruct(n).traj_x/100*6.35);
     vel_x = [0 diff(traj_x)*Fs];
     acc_x = [0 diff(vel_x)*Fs];
-    traj_y = filtfilt(b,a,jstruct(n).traj_y/100*6.35);
+    %traj_y = filtfilt(b,a,jstruct(n).traj_y/100*6.35);
+    traj_y = filter(hd,jstruct(n).traj_y/100*6.35);
     vel_y = [0 diff(traj_y)*Fs];
     acc_y = [0 diff(vel_y)*Fs];
     RoC = (vel_x.^2 + vel_y.^2).^(3/2)./abs(vel_x.*acc_y-vel_y.*acc_x);
+    
+    A = [traj_x;traj_y];
+    B = [vel_x;vel_y];
+    angle_pos_vel = max(min(dot(A,B)./(vecnorm(A,2,1).*vecnorm(B,2,1)),1),-1);
+    angle_in_deg = real(acosd(angle_pos_vel));
+    %tangential_velocity_2 = mag_vel.*sin(ThetaInDegrees*pi/180);
     radial_position = sqrt(traj_x.^2+traj_y.^2);
     radial_vel = (traj_x.*vel_x + traj_y.*vel_y)./radial_position;
+    mag_vel = sqrt(vel_x.^2+vel_y.^2);
     radial_acc = [0 diff(radial_position)*Fs];
     angular_vel = (traj_x.*vel_y - traj_y.*vel_x)./(traj_x.^2+traj_y.^2);
     tangential_vel = radial_position.*angular_vel;
@@ -55,7 +66,7 @@ for j = 1 %:length(index_reward) %1:50 %3:32
     offset_js = jstruct(n).js_pairs_r(js_reward,2);
     
     radial_vel = abs(radial_vel);
-    for k = 2 %:length(js_reward)
+    for k = 1:length(js_reward)
         
         % Extract data within a trial
         start_time = onset_js(k)-0.1*Fs;
@@ -73,8 +84,8 @@ for j = 1 %:length(index_reward) %1:50 %3:32
         % radial velocity
         A = repmat(loc_RoC',[1 length(loc_vel)]);
         [minValue,closestIndex] = min(abs(A-loc_vel),[],1);        
-        loc_vel(minValue>10) = [];
-        closestIndex(minValue>10) = [];
+        loc_vel(minValue>1) = [];
+        closestIndex(minValue>1) = [];
         
         % 
         pos_min_vel = radial_pos_trial(loc_vel);
