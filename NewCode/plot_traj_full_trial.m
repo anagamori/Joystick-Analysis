@@ -3,8 +3,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_2_F_081920_CT';
-data_ID = '083021_60_80_100_0250_010_010_000_360_000_360_000';
+mouse_ID = 'Box_4_F_102320_CT_video';
+data_ID = '092721_60_80_100_0250_010_010_000_360_000_360_004';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -36,7 +36,7 @@ trial_duration = str2double(condition_array{5});
 
 theta = 0:0.01:2*pi;
 %%
-for j = 2 %:length(index_reward) %1:50 %3:32
+for j = 1:length(index_reward) %1:50 %3:32
     
     n = index_reward(j);
     %traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);
