@@ -3,8 +3,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_2_F_081920_CT';
-data_ID = '081621_60_80_100_0250_010_010_000_360_000_360_000';
+mouse_ID = 'Box_3_F_102320_CT';
+data_ID = '100921_60_80_100_0500_010_010_000_360_000_360_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -39,7 +39,7 @@ trial_duration = str2double(condition_array{5});
 
 theta = 0:0.01:2*pi;
 %%
-for j = 1 %:length(index_reward) %1:50 %3:32
+for j = 1:length(index_reward) %1:50 %3:32
     
     n = index_reward(j);
     traj_x = filter(hd,jstruct(n).traj_x/100*6.35);
@@ -66,9 +66,9 @@ for j = 1 %:length(index_reward) %1:50 %3:32
         trial_start_time = onset_js(k)-0.05*Fs;
         trial_end_time = trial_start_time + trial_duration + 0.1*Fs;
 
-        radial_pos_trial = radial_position(trial_start_time:trial_start_time + trial_duration + 0.1*Fs);
-        radial_vel_trial = radial_vel(trial_start_time:trial_start_time + trial_duration + 0.1*Fs);
-        RoC_trial = RoC(trial_start_time:trial_start_time + trial_duration + 0.1*Fs); 
+        radial_pos_trial = radial_position(trial_start_time:trial_end_time);
+        radial_vel_trial = radial_vel(trial_start_time:trial_end_time);
+        RoC_trial = RoC(trial_start_time:trial_end_time); 
         
         % Find local minima in radial velocity and RoC
         [min_vel,loc_vel] = findpeaks(-abs(radial_vel_trial));

@@ -3,8 +3,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_4_F_102320_CT_video';
-data_ID = '092721_60_80_100_0250_010_010_000_360_000_360_004';
+mouse_ID = 'Box_3_F_102320_CT';
+data_ID = '100921_60_80_100_0500_010_010_000_360_000_360_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -23,8 +23,10 @@ hd = design(d, 'butter');
 index_reward = [];
 
 for i = 1:nTrial
-    if ~isempty(jstruct(i).reward_onset)
-        index_reward = [index_reward i];
+    if ~isempty(jstruct(i).reward_onset) 
+        if length(jstruct(i).reward_onset) > size(jstruct(i).masking_light,1) 
+            index_reward = [index_reward i];
+        end
     end
 end
 
@@ -36,7 +38,7 @@ trial_duration = str2double(condition_array{5});
 
 theta = 0:0.01:2*pi;
 %%
-for j = 1:length(index_reward) %1:50 %3:32
+for j = 4 %:length(index_reward) %1:50 %3:32
     
     n = index_reward(j);
     %traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);

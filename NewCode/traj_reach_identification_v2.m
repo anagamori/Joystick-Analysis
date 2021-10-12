@@ -3,8 +3,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_2_F_081920_CT';
-data_ID = '081821_60_80_100_0200_010_010_000_360_000_360_000';
+mouse_ID = 'Box_3_F_102320_CT';
+data_ID = '100921_60_80_100_0500_010_010_000_360_000_360_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -19,7 +19,8 @@ index_validTrial = [];
 Fs = 1000;
 [b,a] = butter(4,50/(Fs*2),'low');
 index_reward = [];
-
+d = fdesign.lowpass('N,F3db',8, 20, 1000);
+hd = design(d, 'butter');
 for i = 1:nTrial
     if ~isempty(jstruct(i).reward_onset)
         index_reward = [index_reward i];
@@ -41,10 +42,10 @@ for j = 1:length(index_reward)
     n = index_reward(j);
     
     % Preprocess trajectory data
-    traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);
+    traj_x = filter(hd,jstruct(n).traj_x/100*6.35);
     vel_x = [0 diff(traj_x)*Fs];
     acc_x = [0 diff(vel_x)*Fs];
-    traj_y = filtfilt(b,a,jstruct(n).traj_y/100*6.35);
+    traj_y = filter(hd,jstruct(n).traj_y/100*6.35);
     vel_y = [0 diff(traj_y)*Fs];
     acc_y = [0 diff(vel_y)*Fs];
     RoC = (vel_x.^2 + vel_y.^2).^(3/2)./abs(vel_x.*acc_y-vel_y.*acc_x);
