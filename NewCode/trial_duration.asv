@@ -8,6 +8,7 @@
 %   threshold for the first time (Figure 102)
 %       - time at which the joystick leaves the inner threshold)
 %   3. Hold within the inner circle (Figure 103)
+%   4. Hold within the target (Figure 104)
 %%-------------------------------------------------------------------------
 close all
 clear all
@@ -81,24 +82,35 @@ for j = 1:length(index_reward) %1:50 %3:32
         offset_js_l = jstruct(n).js_pairs_l(b_diff(end),2);
         
         trial_live_idx = find(jstruct(n).trial_live(:,1)==onset_js(k));
-        if ~isempty(trial_live_idx)
-            onset_trial = jstruct(n).trial_live(trial_live_idx,1);
-            offset_trial = jstruct(n).trial_live(trial_live_idx,2);
-
-            trial_dur = [trial_dur offset_trial - onset_trial];
-
-            start_time = onset_js(k);
-            end_time = offset_trial; %+1*Fs; %offset_js(k);
-            time = [1:end_time-start_time+1]./Fs;
-            radial_position_tiral = radial_position(start_time:end_time);
-
-            zx_hold_threshold = zci(radial_position_tiral - hold_threshold);
-            zx_target_threshold = zci(radial_position_tiral - outer_threshold);
-            zx_max_distance = zci(radial_position_tiral - max_distance);
-            hold_duration = [hold_duration zx_hold_threshold(1)];
-            reach_duration = [reach_duration zx_target_threshold(1) - zx_hold_threshold(1)];
-            %hold_target_duration = [hold_target_duration length(find(radial_position_tiral>outer_threshold&radial_position_tiral<max_distance))];
+        onset_trial = jstruct(n).trial_live(trial_live_idx,1);
+        offset_trial = jstruct(n).trial_live(trial_live_idx,2);
+        
+        trial_dur = [trial_dur offset_trial - onset_trial];
+        
+        start_time = onset_js(k);
+        end_time = offset_trial; %+1*Fs; %offset_js(k);
+        time = [1:end_time-start_time+1]./Fs;
+        radial_position_tiral = radial_position(start_time:end_time);
+    
+        zx_hold_threshold = zci(radial_position_tiral - hold_threshold);
+        zx_target_threshold = zci(radial_position_tiral - outer_threshold);
+        zx_max_distance = zci(radial_position_tiral - max_distance);
+        hold_duration = [hold_duration zx_hold_threshold(1)];
+        reach_duration = [reach_duration zx_target_threshold(1) - zx_hold_threshold(1)];
+        %hold_target_duration = [hold_target_duration length(find(radial_position_tiral>outer_threshold&radial_position_tiral<max_distance))];
+        if isempty(zx_max_distance)
+            hold_target_duration = [hold_target_duration zx_target_threshold(2) - zx_target_threshold(1)];
+        else
+            if 
+            hold_target_duration = [hold_target_duration zx_max_distance(1) - zx_target_threshold(1)];
         end
+%         if ~isempty(zx_hold_threshold) 
+%             if zx_hold_threshold(1) < zx_target_threshold(1)
+%                 hold_duration = [hold_duration zx_hold_threshold(1)];
+%                 hold_target_duration = [hold_target_duration zx_target_threshold(1) - zx_hold_threshold(1)];
+%             end
+%         end
+%  
     end
 end
 
@@ -137,6 +149,19 @@ set(gca,'box','off')
 ax2 = subplot(2,1,2);
 boxplot(hold_duration, 'Orientation','Horizontal')
 xlabel('Duration within hold')
+set(gca,'TickDir','out')
+set(gca,'box','off')
+linkaxes([ax1 ax2],'x')
+
+%%
+figure(104)
+ax1 = subplot(2,1,1);
+histogram(hold_target_duration,20:5:max(hold_target_duration))
+set(gca,'TickDir','out')
+set(gca,'box','off')
+ax2 = subplot(2,1,2);
+boxplot(hold_target_duration, 'Orientation','Horizontal')
+xlabel('Duration within target')
 set(gca,'TickDir','out')
 set(gca,'box','off')
 linkaxes([ax1 ax2],'x')
