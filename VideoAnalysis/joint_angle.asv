@@ -32,7 +32,7 @@ upper_length = sqrt(x1.^2+y1.^2);
 x2 =  wrist_x-elbow_x;
 y2 =  wrist_y-elbow_y;
 fore_length = sqrt(x2.^2+y2.^2);
-elbow_angle_cam1 = 180+atan2d(x1.*y2-y1.*x2,x1.*x2+y1.*y2);
+elbow_angle_cam1 = atan2d(x1.*y2-y1.*x2,x1.*x2+y1.*y2);
 
 shoulder_x = data_cam2(:,2);
 shoulder_y = data_cam2(:,3);
@@ -46,7 +46,7 @@ y1 =  elbow_y-shoulder_y;
 x2 =  wrist_x-elbow_x;
 y2 =  wrist_y-elbow_y;
 
-elbow_angle_cam2 = 180+atan2d(x1.*y2-y1.*x2,x1.*x2+y1.*y2);
+elbow_angle_cam2 = atan2d(x1.*y2-y1.*x2,x1.*x2+y1.*y2);
 
 figure(1)
 
@@ -67,17 +67,3 @@ set(h1, 'Ydir', 'reverse')
 set(gca,'TickDir','out')
 set(gca,'box','off')
 
-figure(3)
-h2 = axes;
-for i = 1 %:10:length(time)
-
-plot([shoulder_x(i) elbow_x(i) wrist_x(i)],[shoulder_y(i) elbow_y(i) wrist_y(i)],'color','k','LineWidth',1)
-hold on 
-plot(shoulder_x(i),shoulder_y(i),'o','color','b','LineWidth',1)
-plot(elbow_x(i),elbow_y(i),'o','color','r','LineWidth',1)
-plot(wrist_x(i),wrist_y(i),'o','color','m','LineWidth',1)
-end
-set(h2, 'Ydir', 'reverse')
-set(gca,'TickDir','out')
-set(gca,'box','off')
-axis equal
