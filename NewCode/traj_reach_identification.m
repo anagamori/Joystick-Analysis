@@ -4,7 +4,7 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_2_F_081920_CT';
-data_ID = '081721_60_80_100_0225_010_010_000_360_000_360_000';
+data_ID = '083021_60_80_100_0250_010_010_000_360_000_360_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -18,7 +18,7 @@ max_radial_position = []; %zeros(1,length(js_reward));
 peak_vel = [];
 
 Fs = 1000;
-[b,a] = butter(4,50/(Fs*2),'low');
+[b,a] = butter(4,10/(Fs*2),'low');
 index_reward = [];
 index_validTrial = [];
 

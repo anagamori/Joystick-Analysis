@@ -12,8 +12,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_4_F_102320_CT_video'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '101921_60_80_050_0300_010_010_000_360_000_360_000';
+mouse_ID = 'Box_2_M_012121_CT'; %Box_4_F_102320_CT';
+data_ID = '101821_60_80_050_0500_010_010_000_360_000_360_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -24,7 +24,7 @@ nTrial = length(jstruct);
 max_radial_position = []; %zeros(1,length(js_reward));
 
 Fs = 1000;
-d = fdesign.lowpass('N,F3db',4, 10, 1000);
+d = fdesign.lowpass('N,F3db',4, 20, 1000);
 hd = design(d, 'butter');
 [b,a] = butter(4,50/(Fs*2),'low');
 index_reward = [];
@@ -45,7 +45,7 @@ trial_duration = str2double(condition_array{5});
 
 theta = 0:0.01:2*pi;
 %%
-for j = 2 %:length(index_reward) %1:50 %3:32
+for j = 3 %:length(index_reward) %1:50 %3:32
     
     n = index_reward(j);
     %traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);
@@ -81,12 +81,12 @@ for j = 2 %:length(index_reward) %1:50 %3:32
         start_time = onset_js(k)-0.1*Fs;
         
         radial_pos_trial = radial_position(start_time:start_time + trial_duration + 0.1*Fs);
-        mag_vel_trial = mag_vel(start_time:start_time + trial_duration + 0.1*Fs);
+        radial_vel_trial = radial_vel(start_time:start_time + trial_duration + 0.1*Fs);
         tangential_vel_trial = tangential_vel(start_time:start_time + trial_duration + 0.1*Fs);
         RoC_trial = RoC(start_time:start_time + trial_duration + 0.1*Fs);
         
         % Find local minima in radial velocity and RoC
-        [min_vel,loc_vel] = findpeaks(-mag_vel_trial);
+        [min_vel,loc_vel] = findpeaks(-radial_vel_trial);
         [min_RoC,loc_RoC] = findpeaks(-RoC_trial);
         
         % Find local minima in RoC that coincided (within 2 ms difference) with local minima in
@@ -162,7 +162,7 @@ for j = 2 %:length(index_reward) %1:50 %3:32
         ax6 = subplot(3,1,3);
         semilogy(time,RoC(start_time:end_time),'LineWidth',1)
         hold on
-        semilogy(time(loc_RoC(closestIndex)),RoC(loc_RoC(closestIndex)+start_time),'o')
+        plot(time(loc_RoC(closestIndex)),RoC(loc_RoC(closestIndex)+start_time),'o')
         xlabel('Time (ms)')
         ylabel('Raidus of Curvature')
         xlim([time(1),time(end)])

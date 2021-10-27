@@ -20,7 +20,10 @@ function [failure, err] = doAllstats(wdir)
 %       wdir :: working directory (passed as a string). Must contain a
 %           jstruct.
 failure = 0; err = '';
-list = rdir([wdir,'\jstruct.mat']);
+currentFolder = pwd;
+cd(wdir)
+list =dir('*.mat');
+%list = rdir([wdir,'\jstruct.mat']);
 if length(list)>1
     failure = 4;
     err = 'Multiple jstructs in a single folder';
@@ -33,6 +36,7 @@ try
     stats = xy_getstats(jstruct, wdir);
     stats = xy_getstats(jstruct, wdir ,1);
     clear jstruct;
+    cd(currentFolder)
 catch e
     failure = 4; err = getReport(e);
 end
