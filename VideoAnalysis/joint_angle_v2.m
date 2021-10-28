@@ -25,6 +25,8 @@ elbow_x = data_cam1(:,5);
 elbow_y = data_cam1(:,6);
 wrist_x = data_cam1(:,8);
 wrist_y = data_cam1(:,9);
+hand_x = data_cam1(:,11);
+hand_y = data_cam1(:,12);
 
 x1 =  elbow_x-shoulder_x;
 y1 =  elbow_y-shoulder_y;
@@ -32,7 +34,10 @@ upper_length = sqrt(x1.^2+y1.^2);
 x2 =  wrist_x-elbow_x;
 y2 =  wrist_y-elbow_y;
 fore_length = sqrt(x2.^2+y2.^2);
-elbow_angle_cam1 = atan2d(x1.*y2-y1.*x2,x1.*x2+y1.*y2);
+elbow_angle_cam1 = 180+atan2d(x1.*y2-y1.*x2,x1.*x2+y1.*y2);
+x3 =  hand_x-wrist_x;
+y3 =  hand_y-wrist_y;
+wrist_angle_cam1 = 180+atan2d(x2.*y3-y2.*x3,x2.*x3+y2.*y3);
 
 shoulder_x = data_cam2(:,2);
 shoulder_y = data_cam2(:,3);
@@ -46,16 +51,22 @@ y1 =  elbow_y-shoulder_y;
 x2 =  wrist_x-elbow_x;
 y2 =  wrist_y-elbow_y;
 
-elbow_angle_cam2 = atan2d(x1.*y2-y1.*x2,x1.*x2+y1.*y2);
+elbow_angle_cam2 = 180+atan2d(x1.*y2-y1.*x2,x1.*x2+y1.*y2);
 
 figure(1)
-
+subplot(2,1,1)
 plot(time,elbow_angle_cam1,'LineWidth',1)
 hold on 
 plot(time,elbow_angle_cam2,'LineWidth',1)
-xline(1,'--','LineWidth',1,'color','k')
+xline(0.5,'--','LineWidth',1,'color','k')
 set(gca,'TickDir','out')
 set(gca,'box','off')
+subplot(2,1,2)
+plot(time,wrist_angle_cam1,'LineWidth',1)
+xline(0.5,'--','LineWidth',1,'color','k')
+set(gca,'TickDir','out')
+set(gca,'box','off')
+
 
 figure(2)
 h1 = axes;
@@ -67,3 +78,17 @@ set(h1, 'Ydir', 'reverse')
 set(gca,'TickDir','out')
 set(gca,'box','off')
 
+figure(3)
+h2 = axes;
+for i = 1 %:10:length(time)
+
+plot([shoulder_x(i) elbow_x(i) wrist_x(i)],[shoulder_y(i) elbow_y(i) wrist_y(i)],'color','k','LineWidth',1)
+hold on 
+plot(shoulder_x(i),shoulder_y(i),'o','color','b','LineWidth',1)
+plot(elbow_x(i),elbow_y(i),'o','color','r','LineWidth',1)
+plot(wrist_x(i),wrist_y(i),'o','color','m','LineWidth',1)
+end
+set(h2, 'Ydir', 'reverse')
+set(gca,'TickDir','out')
+set(gca,'box','off')
+axis equal
