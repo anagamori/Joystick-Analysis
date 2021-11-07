@@ -14,7 +14,6 @@ clc
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_4_F_081921_CT'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
 data_ID = '110221_60_80_050_0300_010_010_000_360_000_360_000';
-
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -77,6 +76,9 @@ trial_duration = str2double(condition_array{5});
 index_trial = 0;
 index_identified = [];
 theta = 0:0.01:2*pi;
+
+mag_vel_trial_2_all = [];
+
 for j = 1:size(index_validTrial,2) %1:50 %3:32
     n = index_validTrial(1,j);
     k = index_validTrial(2,j);
@@ -121,20 +123,22 @@ for j = 1:size(index_validTrial,2) %1:50 %3:32
     % Extract data within a trial
     trial_start_time = onset_js(k)-0.05*Fs;
     trial_end_time = trial_start_time + trial_duration + 0.05*Fs;
-    time = [1:(trial_end_time-trial_start_time)+1]/Fs; %[-0.05*Fs:end_time]./Fs;
+    time = [1:(trial_end_time-trial_start_time)]/Fs; %[-0.05*Fs:end_time]./Fs;
     time = time*1000;
             
-    radial_pos_trial = radial_position(trial_start_time:trial_end_time);
-    radial_vel_trial = radial_vel(trial_start_time:trial_end_time);
-    tangential_vel_trial = tangential_vel(trial_start_time:trial_end_time);
-    mag_vel_trial = mag_vel(trial_start_time:trial_end_time);
-    RoC_trial = RoC(trial_start_time:trial_end_time);
+    radial_pos_trial = radial_position(trial_start_time+1:trial_end_time);
+    radial_vel_trial = radial_vel(trial_start_time+1:trial_end_time);
+    tangential_vel_trial = tangential_vel(trial_start_time+1:trial_end_time);
+    mag_vel_trial = mag_vel(trial_start_time+1:trial_end_time);
+    RoC_trial = RoC(trial_start_time+1:trial_end_time);
     
-    radial_pos_trial_2 = radial_position_2(trial_start_time:trial_end_time);
-    radial_vel_trial_2 = radial_vel_2(trial_start_time:trial_end_time);
-    tangential_vel_trial_2 = tangential_vel_2(trial_start_time:trial_end_time);
-    mag_vel_trial_2 = mag_vel_2(trial_start_time:trial_end_time);
-    RoC_trial_2 = RoC_2(trial_start_time:trial_end_time);
+    radial_pos_trial_2 = radial_position_2(trial_start_time+1:trial_end_time);
+    radial_vel_trial_2 = radial_vel_2(trial_start_time+1:trial_end_time);
+    tangential_vel_trial_2 = tangential_vel_2(trial_start_time+1:trial_end_time);
+    mag_vel_trial_2 = mag_vel_2(trial_start_time+1:trial_end_time);
+    RoC_trial_2 = RoC_2(trial_start_time+1:trial_end_time);
+    
+    mag_vel_trial_2_all = [mag_vel_trial_2_all mag_vel_trial_2];
     
     % Find local minima in radial velocity and RoC
     [min_vel,loc_vel] = findpeaks(-mag_vel_trial);
@@ -161,7 +165,7 @@ for j = 1:size(index_validTrial,2) %1:50 %3:32
     
     if plotOpt == 1
         figure(1)
-        plot(traj_x(trial_start_time:trial_end_time),traj_y(trial_start_time:trial_end_time),'LineWidth',1)
+        plot(traj_x(trial_start_time+1:trial_end_time),traj_y(trial_start_time+1:trial_end_time),'LineWidth',1)
         xlim([-7 7])
         ylim([-7 7])
         set(gca,'TickDir','out')
@@ -172,76 +176,80 @@ for j = 1:size(index_validTrial,2) %1:50 %3:32
         plot(max_distance*cos(theta),max_distance*sin(theta),'color','g')
         axis equal
         
-        figure()
-        subplot(3,1,1)
-        plot(time,traj_x(trial_start_time:trial_end_time),'LineWidth',1)
-        hold on 
-        plot(time,traj_x_2(trial_start_time:trial_end_time),'LineWidth',1)
-        ylabel('x-position (mm)')
-        set(gca,'TickDir','out');
-        set(gca,'box','off')
-        hold on
-        subplot(3,1,2)
-        plot(time,traj_y(trial_start_time:trial_end_time),'LineWidth',1)
-        hold on 
-        plot(time,traj_y_2(trial_start_time:trial_end_time),'LineWidth',1)
-        xlabel('Time (s)')
-        ylabel('y-position (mm)')
-        set(gca,'TickDir','out');
-        set(gca,'box','off')
-        hold on
-        subplot(3,1,3)
-        plot(time,radial_position(trial_start_time:trial_end_time),'LineWidth',1)
-        hold on
-        plot(time,radial_position_2(trial_start_time:trial_end_time),'LineWidth',1)
-        yline(hold_threshold,'--','color','k','LineWidth',1)
-        yline(outer_threshold,'color','g','LineWidth',1)
-        yline(max_distance,'color','g','LineWidth',1)
-        ylabel('radial distance (mm)')
-        set(gca,'TickDir','out');
-        set(gca,'box','off')
-        
-        figure()
-        subplot(3,1,1)
-        plot(time,radial_position(trial_start_time:trial_end_time),'LineWidth',1)       
-        hold on
-        plot(time,radial_position_2(trial_start_time:trial_end_time),'LineWidth',1)
-        yline(hold_threshold,'--','color','k','LineWidth',1)
-        yline(outer_threshold,'color','g','LineWidth',1)
-        yline(max_distance,'color','g','LineWidth',1)
-        ylabel('Radial Position (mm)')
-        set(gca,'TickDir','out');
-        set(gca,'box','off')
-        subplot(3,1,2)
-        plot(time,mag_vel(trial_start_time:trial_end_time),'LineWidth',1)
-        hold on 
-        plot(time,mag_vel_2(trial_start_time:trial_end_time),'LineWidth',1)
-        ylabel('Radial Velocity (mm/s)')
-        set(gca,'TickDir','out');
-        set(gca,'box','off')
-        subplot(3,1,3)
-        semilogy(time,RoC(trial_start_time:trial_end_time),'LineWidth',1)
-        hold on 
-        semilogy(time,RoC_2(trial_start_time:trial_end_time),'LineWidth',1)
-        xlabel('Time (ms)')
-        ylabel('Raidus of Curvature')
-        set(gca,'TickDir','out');
-        set(gca,'box','off')
-        
-        figure()
-        plot(time,mag_vel_trial_2,'LineWidth',1)       
-        hold on
-        plot(time,radial_vel_trial_2,'LineWidth',1)   
-        plot(time,tangential_vel_trial_2,'LineWidth',1)  
-        ylabel('Radial Position (mm)')
-        set(gca,'TickDir','out');
-        set(gca,'box','off')
- 
+%         figure()
+%         subplot(3,1,1)
+%         plot(time,traj_x(trial_start_time:trial_end_time),'LineWidth',1)
+%         hold on 
+%         plot(time,traj_x_2(trial_start_time:trial_end_time),'LineWidth',1)
+%         ylabel('x-position (mm)')
+%         set(gca,'TickDir','out');
+%         set(gca,'box','off')
+%         hold on
+%         subplot(3,1,2)
+%         plot(time,traj_y(trial_start_time:trial_end_time),'LineWidth',1)
+%         hold on 
+%         plot(time,traj_y_2(trial_start_time:trial_end_time),'LineWidth',1)
+%         xlabel('Time (s)')
+%         ylabel('y-position (mm)')
+%         set(gca,'TickDir','out');
+%         set(gca,'box','off')
+%         hold on
+%         subplot(3,1,3)
+%         plot(time,radial_position(trial_start_time:trial_end_time),'LineWidth',1)
+%         hold on
+%         plot(time,radial_position_2(trial_start_time:trial_end_time),'LineWidth',1)
+%         yline(hold_threshold,'--','color','k','LineWidth',1)
+%         yline(outer_threshold,'color','g','LineWidth',1)
+%         yline(max_distance,'color','g','LineWidth',1)
+%         ylabel('radial distance (mm)')
+%         set(gca,'TickDir','out');
+%         set(gca,'box','off')
+%         
+%         figure()
+%         subplot(3,1,1)
+%         plot(time,radial_position(trial_start_time:trial_end_time),'LineWidth',1)       
+%         hold on
+%         plot(time,radial_position_2(trial_start_time:trial_end_time),'LineWidth',1)
+%         yline(hold_threshold,'--','color','k','LineWidth',1)
+%         yline(outer_threshold,'color','g','LineWidth',1)
+%         yline(max_distance,'color','g','LineWidth',1)
+%         ylabel('Radial Position (mm)')
+%         set(gca,'TickDir','out');
+%         set(gca,'box','off')
+%         subplot(3,1,2)
+%         plot(time,mag_vel(trial_start_time:trial_end_time),'LineWidth',1)
+%         hold on 
+%         plot(time,mag_vel_2(trial_start_time:trial_end_time),'LineWidth',1)
+%         ylabel('Radial Velocity (mm/s)')
+%         set(gca,'TickDir','out');
+%         set(gca,'box','off')
+%         subplot(3,1,3)
+%         semilogy(time,RoC(trial_start_time:trial_end_time),'LineWidth',1)
+%         hold on 
+%         semilogy(time,RoC_2(trial_start_time:trial_end_time),'LineWidth',1)
+%         xlabel('Time (ms)')
+%         ylabel('Raidus of Curvature')
+%         set(gca,'TickDir','out');
+%         set(gca,'box','off')
+%         
+%         figure()
+%         plot(time,mag_vel_trial_2,'LineWidth',1)       
+%         hold on
+%         plot(time,radial_vel_trial_2,'LineWidth',1)   
+%         plot(time,tangential_vel_trial_2,'LineWidth',1)  
+%         ylabel('Radial Position (mm)')
+%         set(gca,'TickDir','out');
+%         set(gca,'box','off')
+%  
         %
         
     end
 end
 
+%%
+[pxx,f] = pwelch(mag_vel_trial_2_all-mean(mag_vel_trial_2_all),rectwin(length(time)),0.9*length(time),0:0.5:200,Fs,'power');
+figure
+plot(f,pxx)
 %%
 figure()
 histogram(peak_vel,[20:5:200])

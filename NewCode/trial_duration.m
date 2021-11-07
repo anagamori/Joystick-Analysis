@@ -14,8 +14,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_2_M_012121_CT';
-data_ID = '102021_60_80_050_0300_010_010_000_360_000_360_000';
+mouse_ID = 'Box_4_M_012121_CT'; %Box_3_F_081920_CT
+data_ID = '103021_60_80_050_0300_010_010_000_360_000_360_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])

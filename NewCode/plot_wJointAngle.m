@@ -12,21 +12,18 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_4_F_081921_CT'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '110221_60_80_050_0300_010_010_000_360_000_360_000';
-
+mouse_ID = 'Box_4_M_012121_CT_video'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+data_ID = '102121_60_80_050_0300_010_010_000_360_000_360_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
 load('jstruct')
-load('index_validTrial')
+load('index_rewarded')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
 plotOpt = 1;
 
 nTrial = length(jstruct);
-max_radial_position = []; %zeros(1,length(js_reward));
-peak_vel = [];
 
 Fs = 1000;
 % d = fdesign.lowpass('N,F3db',4, 10, 1000);
@@ -46,6 +43,44 @@ hd_2 = design(d, 'butter');
 index_reward = [];
 time_reward = [];
 n_reward = 0;
+
+%%
+data_folder_video = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\VideoAnalysis\Data';
+code_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\VideoAnalysis';
+
+Fs_video = 200;
+
+filename_cam1 = 'M_012121_CT_102121_v2_4_17-04-00_cam1DLC_resnet_50_JoystickOct23shuffle1_50000';
+
+cd(data_folder_video)
+data_cam1 = readmatrix(filename_cam1);
+cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
+
+%%
+sample = data_cam1(:,1);
+time_video = [1:length(sample)]./Fs_video;
+
+
+shoulder_x = data_cam1(:,2);
+shoulder_y = data_cam1(:,3);
+elbow_x = data_cam1(:,5);
+elbow_y = data_cam1(:,6);
+wrist_x = data_cam1(:,8);
+wrist_y = data_cam1(:,9);
+
+joystick_x = data_cam1(:,14);
+joystick_y = data_cam1(:,15);
+
+x1 =  elbow_x-shoulder_x;
+y1 =  elbow_y-shoulder_y;
+upper_length = sqrt(x1.^2+y1.^2);
+x2 =  wrist_x-elbow_x;
+y2 =  wrist_y-elbow_y;
+fore_length = sqrt(x2.^2+y2.^2);
+elbow_angle_cam1 = 180+atan2d(x1.*y2-y1.*x2,x1.*x2+y1.*y2);
+
+
+%%
 % Find trials where reward was given
 for i = 1:nTrial
     if ~isempty(jstruct(i).reward_onset)
@@ -77,9 +112,9 @@ trial_duration = str2double(condition_array{5});
 index_trial = 0;
 index_identified = [];
 theta = 0:0.01:2*pi;
-for j = 1:size(index_validTrial,2) %1:50 %3:32
-    n = index_validTrial(1,j);
-    k = index_validTrial(2,j);
+for j = 7 %1:size(index_validTrial,2) %1:50 %3:32
+    n = index_rewarded(1,j);
+    k = index_rewarded(2,j);
     % Preprocessing of x- and y-trajectory data
     traj_x = filtfilt(lpFilt,jstruct(n).traj_x/100*6.35);
     vel_x = [0 diff(traj_x)*Fs];
@@ -99,14 +134,13 @@ for j = 1:size(index_validTrial,2) %1:50 %3:32
     % Compute higher-order statistics
     radial_position = sqrt(traj_x.^2+traj_y.^2); % Radial position
     radial_vel = (traj_x.*vel_x + traj_y.*vel_y)./radial_position; % Radial velocity
-    tangential_vel = (traj_x.*vel_y + traj_y.*vel_x)./(traj_x.^2+traj_y.^2);
+    
     RoC = (vel_x.^2 + vel_y.^2).^(3/2)./abs(vel_x.*acc_y-vel_y.*acc_x); % Radius of curvature
     mag_vel = sqrt(vel_x.^2+vel_y.^2); % Magnitude of velocity vector (i.e. radial + tangential velocity)
     radial_acc = sqrt(acc_x.^2+acc_y.^2);
     
     radial_position_2 = sqrt(traj_x_2.^2+traj_y_2.^2); % Radial position
     radial_vel_2 = (traj_x_2.*vel_x_2 + traj_y_2.*vel_y_2)./radial_position_2; % Radial velocity
-    tangential_vel_2 = (traj_x_2.*vel_y_2 + traj_y_2.*vel_x_2)./(traj_x_2.^2+traj_y_2.^2);
     
     RoC_2 = (vel_x_2.^2 + vel_y_2.^2).^(3/2)./abs(vel_x_2.*acc_y_2-vel_y_2.*acc_x_2); % Radius of curvature
     mag_vel_2 = sqrt(vel_x_2.^2+vel_y_2.^2); % Magnitude of velocity vector (i.e. radial + tangential velocity)
@@ -117,7 +151,7 @@ for j = 1:size(index_validTrial,2) %1:50 %3:32
     js_reward = find(jstruct(n).js_reward==1); %joystick contact for which reward was given
     onset_js = jstruct(n).js_pairs_r(js_reward,1);
     offset_js = jstruct(n).js_pairs_r(js_reward,2);
-    
+    reward_onset = jstruct(n).reward_onset(k);
     % Extract data within a trial
     trial_start_time = onset_js(k)-0.05*Fs;
     trial_end_time = trial_start_time + trial_duration + 0.05*Fs;
@@ -126,34 +160,13 @@ for j = 1:size(index_validTrial,2) %1:50 %3:32
             
     radial_pos_trial = radial_position(trial_start_time:trial_end_time);
     radial_vel_trial = radial_vel(trial_start_time:trial_end_time);
-    tangential_vel_trial = tangential_vel(trial_start_time:trial_end_time);
     mag_vel_trial = mag_vel(trial_start_time:trial_end_time);
     RoC_trial = RoC(trial_start_time:trial_end_time);
     
     radial_pos_trial_2 = radial_position_2(trial_start_time:trial_end_time);
     radial_vel_trial_2 = radial_vel_2(trial_start_time:trial_end_time);
-    tangential_vel_trial_2 = tangential_vel_2(trial_start_time:trial_end_time);
     mag_vel_trial_2 = mag_vel_2(trial_start_time:trial_end_time);
     RoC_trial_2 = RoC_2(trial_start_time:trial_end_time);
-    
-    % Find local minima in radial velocity and RoC
-    [min_vel,loc_vel] = findpeaks(-mag_vel_trial);
-    [min_RoC,loc_RoC] = findpeaks(-RoC_trial);
-    
-    [min_vel_2,loc_vel_2] = findpeaks(-mag_vel_trial_2);
-    [min_RoC_2,loc_RoC_2] = findpeaks(-RoC_trial_2);
-    
-    % Find local minima in RoC that coincided (within 5 ms difference) with local minima in
-    % radial velocity
-    A = repmat(loc_RoC',[1 length(loc_vel)]);
-    [minValue,closestIndex] = min(abs(A-loc_vel),[],1);
-    loc_vel(minValue>5) = [];
-    closestIndex(minValue>5) = [];
-    
-    A_2 = repmat(loc_RoC_2',[1 length(loc_vel_2)]);
-    [minValue_2,closestIndex_2] = min(abs(A_2-loc_vel_2),[],1);
-    loc_vel_2(minValue_2>5) = [];
-    closestIndex_2(minValue_2>5) = [];
     
     % Find velocity peaks
     [max_vel,loc_max_vel] = findpeaks(mag_vel_trial);
@@ -227,22 +240,22 @@ for j = 1:size(index_validTrial,2) %1:50 %3:32
         ylabel('Raidus of Curvature')
         set(gca,'TickDir','out');
         set(gca,'box','off')
-        
-        figure()
-        plot(time,mag_vel_trial_2,'LineWidth',1)       
-        hold on
-        plot(time,radial_vel_trial_2,'LineWidth',1)   
-        plot(time,tangential_vel_trial_2,'LineWidth',1)  
-        ylabel('Radial Position (mm)')
+        %
+        time_new = [0:reward_onset+1*Fs - (reward_onset-0.5*Fs)]/Fs;
+        figure(4)
+        subplot(2,1,1)
+        yyaxis left
+        plot(time_new,radial_position_2(reward_onset-0.5*Fs:reward_onset+1*Fs))
+        yyaxis right
+        plot(time_video,sqrt(joystick_x.^2+joystick_y.^2))
+        xline(0.5,'--','color','k')
         set(gca,'TickDir','out');
         set(gca,'box','off')
- 
-        %
-        
+
+        subplot(2,1,2)
+        plot(time_video,elbow_angle_cam1)
+        set(gca,'TickDir','out');
+        set(gca,'box','off')
     end
 end
 
-%%
-figure()
-histogram(peak_vel,[20:5:200])
-ylabel('Peak Velocity (m/s)')

@@ -12,8 +12,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_2_M_012121_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '101921_60_80_050_0300_010_010_000_360_000_360_000';
+mouse_ID = 'Box_4_F_081921_CT_EMG_2'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+data_ID = '110621_60_80_050_0300_010_010_000_360_000_360_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -71,6 +71,7 @@ trial_duration = str2double(condition_array{5});
 %%
 index_trial = 0;
 index_identified = [];
+index_rewarded = [];
 theta = 0:0.01:2*pi;
 for j = 1:length(index_reward) %1:50 %3:32
     n = index_reward(j);
@@ -99,6 +100,7 @@ for j = 1:length(index_reward) %1:50 %3:32
     
     for k = 1:length(js_reward)
         index_trial = index_trial+ 1;
+        index_rewarded = [index_rewarded [n;k]];
         % Extract data within a trial
         trial_start_time = onset_js(k)-0.05*Fs;
         trial_end_time = trial_start_time + trial_duration + 0.1*Fs;
@@ -220,6 +222,7 @@ index_recorded(flag) = [];
 cd([data_folder mouse_ID '\' data_ID])
 save('index_validTrial','index_validTrial')
 save('index_recorded','index_recorded')
+save('index_rewarded','index_rewarded')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
 %%
