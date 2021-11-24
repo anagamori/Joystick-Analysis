@@ -29,6 +29,9 @@ Fs_EMG = 10000;
 time_EMG = -0.05:1/Fs_EMG:0.25;
 nTrial = length(js_reach);
 
+
+norm_window = [0.1*Fs_EMG:0.2*Fs_EMG]+1*Fs_EMG;
+
 radial_pos_all = [];
 EMG_biceps_all = [];
 EMG_triceps_all = [];
