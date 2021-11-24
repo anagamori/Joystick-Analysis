@@ -3,7 +3,7 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_4_F_081921_CT_EMG'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+mouse_ID = 'Box_4_AN01_EMG'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
 data_ID = '112321_50_80_050_0300_010_010_000_360_000_360_000';
 % mouse_ID = 'Box_4_F_081921_CT_EMG'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
 % data_ID = '110721_60_80_050_0300_010_010_000_360_000_360_004';
@@ -14,11 +14,11 @@ load('js_reach')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
 data_folder = 'D:\JoystickExpts\data\EMG\';
-mouse_ID = 'F_081921_CT'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '110721';
+mouse_ID = 'AN01'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+data_ID = '112321';
 
 cd([data_folder mouse_ID '\' data_ID])
-load('EMG_struct')
+load('data_processed')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
 start_offset = -0.05;
