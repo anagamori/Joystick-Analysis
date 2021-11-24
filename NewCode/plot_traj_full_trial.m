@@ -12,8 +12,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_4_F_102320_CT_video'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '101921_60_80_050_0300_010_010_000_360_000_360_000';
+mouse_ID = 'Box_2_AN04'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+data_ID = '112321_25_200_010_1000_010_020_060_300_060_300_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -24,9 +24,15 @@ nTrial = length(jstruct);
 max_radial_position = []; %zeros(1,length(js_reward));
 
 Fs = 1000;
-d = fdesign.lowpass('N,F3db',4, 10, 1000);
-hd = design(d, 'butter');
-[b,a] = butter(4,50/(Fs*2),'low');
+
+lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
+    'PassbandFrequency',10,'PassbandRipple',0.2, ...
+    'SampleRate',Fs);
+
+lpFilt2 = designfilt('lowpassiir','FilterOrder',8, ...
+    'PassbandFrequency',50,'PassbandRipple',0.2, ...
+    'SampleRate',Fs);
+
 index_reward = [];
 
 for i = 1:nTrial
@@ -42,22 +48,25 @@ outer_threshold = str2double(condition_array{2})/100*6.35;
 max_distance = str2double(condition_array{3})/100*6.35;
 hold_duration = str2double(condition_array{6});
 trial_duration = str2double(condition_array{5});
+min_angle = str2double(condition_array{8});
+max_angle = str2double(condition_array{9});
 
 theta = 0:0.01:2*pi;
 %%
-for j = 2 %:length(index_reward) %1:50 %3:32
+for j = 1:2 %length(index_reward) %1:50 %3:32
     
     n = index_reward(j);
     %traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);
-    traj_x = filter(hd,jstruct(n).traj_x/100*6.35);
+    traj_x = filtfilt(lpFilt,jstruct(n).traj_x/100*6.35);
     vel_x = [0 diff(traj_x)*Fs];
     acc_x = [0 diff(vel_x)*Fs];
     %traj_y = filtfilt(b,a,jstruct(n).traj_y/100*6.35);
-    traj_y = filter(hd,jstruct(n).traj_y/100*6.35);
+    traj_y = filtfilt(lpFilt,jstruct(n).traj_y/100*6.35);
     vel_y = [0 diff(traj_y)*Fs];
     acc_y = [0 diff(vel_y)*Fs];
     RoC = (vel_x.^2 + vel_y.^2).^(3/2)./abs(vel_x.*acc_y-vel_y.*acc_x);
     
+    angle_pos = atan2d(traj_y,traj_x);
     A = [traj_x;traj_y];
     B = [vel_x;vel_y];
     angle_pos_vel = max(min(dot(A,B)./(vecnorm(A,2,1).*vecnorm(B,2,1)),1),-1);
@@ -78,12 +87,13 @@ for j = 2 %:length(index_reward) %1:50 %3:32
     for k = 1:length(js_reward)
         
         % Extract data within a trial
-        start_time = onset_js(k)-0.1*Fs;
+        start_time = onset_js(k) - 0.1*Fs;
+        end_time = onset_reward(k) + 0.05*Fs;
         
-        radial_pos_trial = radial_position(start_time:start_time + trial_duration + 0.1*Fs);
-        mag_vel_trial = mag_vel(start_time:start_time + trial_duration + 0.1*Fs);
-        tangential_vel_trial = tangential_vel(start_time:start_time + trial_duration + 0.1*Fs);
-        RoC_trial = RoC(start_time:start_time + trial_duration + 0.1*Fs);
+        radial_pos_trial = radial_position(start_time:end_time);
+        mag_vel_trial = mag_vel(start_time:end_time);
+        tangential_vel_trial = tangential_vel(start_time:end_time);
+        RoC_trial = RoC(start_time:end_time);
         
         % Find local minima in radial velocity and RoC
         [min_vel,loc_vel] = findpeaks(-mag_vel_trial);
@@ -102,8 +112,8 @@ for j = 2 %:length(index_reward) %1:50 %3:32
         
         %end_time = loc_vel(max_pos_loc) + 0.1*Fs; %offset_trial+0.3*Fs; %start_time + loc_RoC + 0.2; %offset_trial+1*Fs; %offset_js(k);
         
-        end_time = start_time + trial_duration + 0.1*Fs;
-        time = -0.05:1/Fs:(trial_duration+0.05*Fs)/Fs; %[-0.05*Fs:end_time]./Fs;
+        %end_time = start_time + trial_duration + 0.1*Fs;
+        time = [-0.05*Fs:end_time-start_time-0.05*Fs]./Fs;
         time = time*1000;
         loc_vel(loc_vel>end_time) = [];
         loc_RoC(loc_RoC>end_time) = [];
@@ -112,33 +122,33 @@ for j = 2 %:length(index_reward) %1:50 %3:32
         closestIndex(closestIndex>length(loc_RoC)) = [];
         
         % Plot x, y and radial position
-        figure()
-        subplot(3,1,1)
-        plot(time,traj_x(start_time:end_time),'LineWidth',1)
-        xlim([time(1),time(end)])
-        ylabel('x-position (mm)')
-        set(gca,'TickDir','out');
-        set(gca,'box','off')
-        hold on
-        subplot(3,1,2)
-        plot(time,traj_y(start_time:end_time),'LineWidth',1)
-        xlim([time(1),time(end)])
-        xlabel('Time (s)')
-        ylabel('y-position (mm)')
-        set(gca,'TickDir','out');
-        set(gca,'box','off')
-        hold on
-        subplot(3,1,3)
-        plot(time,radial_position(start_time:end_time),'LineWidth',1)
-        hold on
-        plot([time(1) time(end)],[hold_threshold hold_threshold],'--','color','k','LineWidth',1)
-        plot([time(1) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
-        plot([time(1) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
-        xlim([time(1),time(end)])
-        ylabel('radial distance (mm)')
-        set(gca,'TickDir','out');
-        set(gca,'box','off')
-        
+%         figure()
+%         subplot(3,1,1)
+%         plot(time,traj_x(start_time:end_time),'LineWidth',1)
+%         xlim([time(1),time(end)])
+%         ylabel('x-position (mm)')
+%         set(gca,'TickDir','out');
+%         set(gca,'box','off')
+%         hold on
+%         subplot(3,1,2)
+%         plot(time,traj_y(start_time:end_time),'LineWidth',1)
+%         xlim([time(1),time(end)])
+%         xlabel('Time (s)')
+%         ylabel('y-position (mm)')
+%         set(gca,'TickDir','out');
+%         set(gca,'box','off')
+%         hold on
+%         subplot(3,1,3)
+%         plot(time,radial_position(start_time:end_time),'LineWidth',1)
+%         hold on
+%         plot([time(1) time(end)],[hold_threshold hold_threshold],'--','color','k','LineWidth',1)
+%         plot([time(1) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
+%         plot([time(1) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
+%         xlim([time(1),time(end)])
+%         ylabel('radial distance (mm)')
+%         set(gca,'TickDir','out');
+%         set(gca,'box','off')
+%         
         % Plot radial position, velocity magnitude and radius of curvature 
         figure()
         ax4 = subplot(3,1,1);
@@ -170,11 +180,23 @@ for j = 2 %:length(index_reward) %1:50 %3:32
         set(gca,'box','off')
         linkaxes([ax4 ax5 ax6],'x')
         
+        
+
         % Plot x and y trajectories in polar coordinate
-        figure()
-        plot(traj_x(start_time:end_time),traj_y(start_time:end_time),'LineWidth',1)
+        rot = -90*pi/180;
+        x = 0;
+        y = 0;
+        x2=x+(6.35*cos(min_angle*pi/180+rot));
+        y2=y+(6.35*sin(min_angle*pi/180+rot));
+        x3=x+(6.35*cos(max_angle*pi/180+rot));
+        y3=y+(6.35*sin(max_angle*pi/180+rot));
+
+        figure(101)
+        plot(traj_x(start_time:end_time)*cos(rot) -traj_y(start_time:end_time)*sin(rot),traj_y(start_time:end_time)*cos(rot) + traj_x(start_time:end_time)*sin(rot) ,'LineWidth',1)
         hold on
-        plot(traj_x(loc_vel+start_time),traj_y(loc_vel+start_time),'o','LineWidth',1)
+        plot(traj_x(loc_vel+start_time)*cos(rot) -traj_y(loc_vel+start_time)*sin(rot),traj_y(loc_vel+start_time)*cos(rot) + traj_x(loc_vel+start_time)*sin(rot),'o','LineWidth',1)
+        plot([x x2],[y y2],'--','color','m')
+        plot([x x3],[y y3],'--','color','m')
         xlim([-7 7])
         ylim([-7 7])
         set(gca,'TickDir','out')

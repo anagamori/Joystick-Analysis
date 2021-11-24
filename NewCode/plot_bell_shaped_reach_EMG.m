@@ -12,14 +12,15 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_3_M_012121_CT'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '110321_60_80_050_0300_010_010_000_360_000_360_000';
+mouse_ID = 'Box_4_F_081921_CT_EMG_2'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+data_ID = '110621_60_80_050_0300_010_010_000_360_000_360_000';
 
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
 load('jstruct')
 load('index_validTrial')
+load('index_identified')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
 plotOpt = 1;
@@ -73,12 +74,12 @@ max_distance = str2double(condition_array{3})/100*6.35;
 hold_duration = str2double(condition_array{6});
 trial_duration = str2double(condition_array{5});
 
-radial_position_all 
 %%
 index_trial = 0;
-index_identified = [];
 theta = 0:0.01:2*pi;
-for j = 1:size(index_validTrial,2) %1:50 %3:32
+testTrial = 2;
+
+for j = testTrial %:size(index_validTrial,2) %1:50 %3:32
     n = index_validTrial(1,j);
     k = index_validTrial(2,j);
     % Preprocessing of x- and y-trajectory data
@@ -118,7 +119,7 @@ for j = 1:size(index_validTrial,2) %1:50 %3:32
     js_reward = find(jstruct(n).js_reward==1); %joystick contact for which reward was given
     onset_js = jstruct(n).js_pairs_r(js_reward,1);
     offset_js = jstruct(n).js_pairs_r(js_reward,2);
-    
+    reward_onset = jstruct(n).reward_onset(k);
     % Extract data within a trial
     trial_start_time = onset_js(k)-0.05*Fs;
     trial_end_time = trial_start_time + trial_duration + 0.05*Fs;
@@ -159,7 +160,7 @@ for j = 1:size(index_validTrial,2) %1:50 %3:32
     % Find velocity peaks
     [max_vel,loc_max_vel] = findpeaks(mag_vel_trial);
     
-    radial_position_all = [radial_position_all radial_pos_trial_2'];
+    
     if plotOpt == 1
         figure(1)
         plot(traj_x(trial_start_time:trial_end_time),traj_y(trial_start_time:trial_end_time),'LineWidth',1)
@@ -201,45 +202,100 @@ for j = 1:size(index_validTrial,2) %1:50 %3:32
 %         ylabel('radial distance (mm)')
 %         set(gca,'TickDir','out');
 %         set(gca,'box','off')
-%         
-%         figure()
-%         subplot(3,1,1)
-%         plot(time,radial_position(trial_start_time:trial_end_time),'LineWidth',1)       
-%         hold on
-%         plot(time,radial_position_2(trial_start_time:trial_end_time),'LineWidth',1)
-%         yline(hold_threshold,'--','color','k','LineWidth',1)
-%         yline(outer_threshold,'color','g','LineWidth',1)
-%         yline(max_distance,'color','g','LineWidth',1)
-%         ylabel('Radial Position (mm)')
-%         set(gca,'TickDir','out');
-%         set(gca,'box','off')
-%         subplot(3,1,2)
-%         plot(time,mag_vel(trial_start_time:trial_end_time),'LineWidth',1)
-%         hold on 
-%         plot(time,mag_vel_2(trial_start_time:trial_end_time),'LineWidth',1)
-%         ylabel('Radial Velocity (mm/s)')
-%         set(gca,'TickDir','out');
-%         set(gca,'box','off')
-%         subplot(3,1,3)
-%         semilogy(time,RoC(trial_start_time:trial_end_time),'LineWidth',1)
-%         hold on 
-%         semilogy(time,RoC_2(trial_start_time:trial_end_time),'LineWidth',1)
-%         xlabel('Time (ms)')
-%         ylabel('Raidus of Curvature')
-%         set(gca,'TickDir','out');
-%         set(gca,'box','off')
-%         
-%         figure()
-%         plot(time,mag_vel_trial_2,'LineWidth',1)       
-%         hold on
-%         plot(time,radial_vel_trial_2,'LineWidth',1)   
-%         plot(time,tangential_vel_trial_2,'LineWidth',1)  
-%         ylabel('Radial Position (mm)')
-%         set(gca,'TickDir','out');
-%         set(gca,'box','off')
-%  
         
+        time_new = [0:reward_onset+0.5*Fs - (reward_onset-1*Fs)]/Fs;
+        figure(2)
+        subplot(3,1,1)
+        plot(time_new,radial_position(reward_onset-1*Fs:reward_onset+0.5*Fs))
+        hold on
+        plot(time_new,radial_position_2(reward_onset-1*Fs:reward_onset+0.5*Fs))
+        yline(hold_threshold,'--','color','k','LineWidth',1)
+        yline(outer_threshold,'color','g','LineWidth',1)
+        yline(max_distance,'color','g','LineWidth',1)
+        xline(1,'--','color','k')
+        ylabel('Radial Position (mm)')    
+        set(gca,'TickDir','out');
+        set(gca,'box','off')
+        subplot(3,1,2)
+        plot(time_new,mag_vel(reward_onset-1*Fs:reward_onset+0.5*Fs))
+        hold on
+        plot(time_new,mag_vel_2(reward_onset-1*Fs:reward_onset+0.5*Fs),'LineWidth',1)
+        ylabel('Radial Velocity (mm/s)')
+        set(gca,'TickDir','out');
+        set(gca,'box','off')
+
+       
     end
 end
 
 %%
+data_folder = 'D:\JoystickExpts\data\EMG\';
+mouse_ID = 'F_081921_CT'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+data_ID = '110621';
+condition_array = strsplit(data_ID,'_');
+
+
+cd([data_folder mouse_ID '\' data_ID])
+load('test_3')
+cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
+
+Fs_EMG = 10000;
+
+bpFilt = designfilt('bandpassfir','FilterOrder',8, ...
+    'CutoffFrequency1',200,'CutoffFrequency2',700, ...
+    'SampleRate',Fs_EMG);
+
+lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
+    'PassbandFrequency',50,'PassbandRipple',0.2, ...
+    'SampleRate',Fs_EMG);
+
+trialDuration = 1.5*Fs_EMG;
+nTrial = Ch3.length;
+trigger = round(Ch3.times*Fs_EMG);
+
+EMG_bi = bicep.values;
+EMG_tri = tricep.values;
+
+EMG_bi_filt = filtfilt(bpFilt,EMG_bi);
+EMG_tri_filt = filtfilt(bpFilt,EMG_tri);
+
+EMG_bi_rect = abs(EMG_bi_filt)-mean(abs(EMG_bi_filt));
+EMG_tri_rect = abs(EMG_tri_filt)-mean(abs(EMG_tri_filt));
+
+EMG_bi_smooth = filtfilt(lpFilt,EMG_bi_rect);
+EMG_tri_smooth = filtfilt(lpFilt,EMG_tri_rect);
+
+EMG_bi_trial = [];
+EMG_tri_trial = [];
+index = 1;
+for i = 1:nTrial
+    if i > 1
+        if trigger(i) - trigger(i-1) > trialDuration
+            EMG_bi_trial = [EMG_bi_trial EMG_bi_smooth(index:index+trialDuration-1)];
+            EMG_tri_trial = [EMG_tri_trial  EMG_tri_smooth(index:index+trialDuration-1)];
+            index = index + trialDuration;
+        else
+            missingTrial = i;
+        end
+    else
+        EMG_bi_trial = [EMG_bi_trial EMG_bi_smooth(index:index+trialDuration-1)];
+        EMG_tri_trial = [EMG_tri_trial  EMG_tri_smooth(index:index+trialDuration-1)];
+        index = index + trialDuration;
+    end
+    
+    
+end
+
+time_EMG = [1:1*Fs_EMG+0.5*Fs_EMG]/Fs_EMG;
+
+figure(2)
+subplot(3,1,3)
+plot(time_EMG,EMG_bi_trial(:,index_identified(testTrial)))
+hold on
+plot(time_EMG,EMG_tri_trial(:,index_identified(testTrial)))
+xlabel('Time (ms)')
+ylabel('EMG')
+set(gca,'TickDir','out');
+set(gca,'box','off')
+
+        

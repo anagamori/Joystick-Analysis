@@ -23,8 +23,10 @@ lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
     'PassbandFrequency',30,'PassbandRipple',0.2, ...
     'SampleRate',Fs);
 
+trialDuration = 1.5*Fs;
 nTrial = Ch3.length;
-trigger = round(Ch3.times*Fs-bicep.start*Fs);
+trigger = round(Ch3.times*Fs);
+
 EMG_bi = bicep.values;
 EMG_tri = tricep.values;
 
@@ -39,18 +41,23 @@ EMG_tri_smooth = filtfilt(lpFilt,EMG_tri_rect);
 
 EMG_bi_trial = [];
 EMG_tri_trial = [];
+index = 1;
 for i = 1:nTrial
+    if i > 1
+        if trigger(i) - trigger(i-1) > trialDuration
+            EMG_bi_trial = [EMG_bi_trial EMG_bi_smooth(index:index+trialDuration-1)];
+            EMG_tri_trial = [EMG_tri_trial  EMG_tri_smooth(index:index+trialDuration-1)];
+            index = index + trialDuration;
+        else
+            missingTrial = i;
+        end
+    else
+        EMG_bi_trial = [EMG_bi_trial  EMG_bi_smooth(index:index+trialDuration-1)];
+        EMG_tri_trial = [EMG_tri_trial  EMG_tri_smooth(index:index+trialDuration-1)];
+        index = index + trialDuration;
+    end
     
-    EMG_bi_trial = EMG_bi_smooth(trigger(i)+1-1*Fs:trigger(i)+0.5*Fs);
-    EMG_tri_trial = EMG_bi_smooth(trigger(i)+1-1*Fs:trigger(i)+0.5*Fs);
     
-    figure(2)
-    subplot(2,1,1)
-    plot(EMG_bi_trial)
-    hold on 
-    subplot(2,1,2)
-    plot(EMG_tri_trial)
-    hold on
 end
 
 figure(1)
@@ -64,3 +71,11 @@ plot(EMG_tri)
 hold on
 plot(EMG_tri_filt)
 plot(EMG_tri_smooth)
+
+figure(2)
+subplot(2,1,1)
+plot(mean(EMG_bi_trial,2))
+hold on
+subplot(2,1,2)
+plot(mean(EMG_tri_trial,2))
+hold on
