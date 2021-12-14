@@ -11,8 +11,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_4_AN01_EMG'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '112321_60_80_050_0300_010_010_000_360_000_360_000';
+mouse_ID = 'Box_4_AN05'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+data_ID = '121021_50_80_030_10000_005_010_000_180_000_180_001';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -72,6 +72,10 @@ hold_duration = str2double(condition_array{6});
 trial_duration = str2double(condition_array{5});
 
 %%
+zci = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0);  
+
+%%
+reach_duration = [];
 n_successful_trial = 0;
 index_identified = [];
 index_rewarded = [];
@@ -116,31 +120,64 @@ for j = 1:length(index_reward) %1:50 %3:32
         
         % Extract data within a trial
         recording_start_time = onset_reward(k)-1*Fs;
-        recording_end_time = onset_reward(k)+0.5*Fs-1;
+        recording_end_time = onset_reward(k)+0.5*Fs-1;       
         
         % store data into structure
-        js_reach(n_successful_trial).traj_x = traj_x(recording_start_time:recording_end_time);
-        js_reach(n_successful_trial).traj_y = traj_y(recording_start_time:recording_end_time);
-        js_reach(n_successful_trial).radial_pos = radial_position(recording_start_time:recording_end_time);
-        js_reach(n_successful_trial).mag_vel = mag_vel(recording_start_time:recording_end_time);
-        js_reach(n_successful_trial).RoC = RoC(recording_start_time:recording_end_time);
+        if recording_end_time > length(traj_x)
+            js_reach(n_successful_trial).traj_x = traj_x(recording_start_time:end);
+            js_reach(n_successful_trial).traj_y = traj_y(recording_start_time:end);
+            js_reach(n_successful_trial).radial_pos = radial_position(recording_start_time:end);
+            js_reach(n_successful_trial).mag_vel = mag_vel(recording_start_time:end);
+            js_reach(n_successful_trial).RoC = RoC(recording_start_time:end);
+
+            js_reach(n_successful_trial).traj_x_2 = traj_x_2(recording_start_time:end);
+            js_reach(n_successful_trial).traj_y_2 = traj_y_2(recording_start_time:end);
+            js_reach(n_successful_trial).radial_pos_2 = radial_position_2(recording_start_time:end);
+            js_reach(n_successful_trial).mag_vel_2 = mag_vel_2(recording_start_time:end);
+            js_reach(n_successful_trial).RoC_2 = RoC_2(recording_start_time:end);
+        else
+            js_reach(n_successful_trial).traj_x = traj_x(recording_start_time:recording_end_time);
+            js_reach(n_successful_trial).traj_y = traj_y(recording_start_time:recording_end_time);
+            js_reach(n_successful_trial).radial_pos = radial_position(recording_start_time:recording_end_time);
+            js_reach(n_successful_trial).mag_vel = mag_vel(recording_start_time:recording_end_time);
+            js_reach(n_successful_trial).RoC = RoC(recording_start_time:recording_end_time);
+
+            js_reach(n_successful_trial).traj_x_2 = traj_x_2(recording_start_time:recording_end_time);
+            js_reach(n_successful_trial).traj_y_2 = traj_y_2(recording_start_time:recording_end_time);
+            js_reach(n_successful_trial).radial_pos_2 = radial_position_2(recording_start_time:recording_end_time);
+            js_reach(n_successful_trial).mag_vel_2 = mag_vel_2(recording_start_time:recording_end_time);
+            js_reach(n_successful_trial).RoC_2 = RoC_2(recording_start_time:recording_end_time);
+        end
         
-        js_reach(n_successful_trial).traj_x_2 = traj_x_2(recording_start_time:recording_end_time);
-        js_reach(n_successful_trial).traj_y_2 = traj_y_2(recording_start_time:recording_end_time);
-        js_reach(n_successful_trial).radial_pos_2 = radial_position_2(recording_start_time:recording_end_time);
-        js_reach(n_successful_trial).mag_vel_2 = mag_vel_2(recording_start_time:recording_end_time);
-        js_reach(n_successful_trial).RoC_2 = RoC_2(recording_start_time:recording_end_time);
         
+        %% Reach duration
+        trial_start_time =  onset_reward(k)-0.2*Fs;
+        trial_end_time = onset_reward(k);
+        radial_pos_trial = radial_position_2(trial_start_time:trial_end_time);
+        zx_hold_threshold = zci(radial_pos_trial - hold_threshold);
+        zx_target_threshold = zci(radial_pos_trial - outer_threshold);
+        zx_hold_threshold(zx_hold_threshold==length(radial_pos_trial)) = [];
+        zx_target_threshold(zx_target_threshold==length(radial_pos_trial)) = [];
+        if ~isempty(zx_hold_threshold) && ~isempty(zx_target_threshold)
+            reach_duration = [reach_duration zx_target_threshold(1) - zx_hold_threshold(end)];
+        else
+            reach_duration = [reach_duration nan];
+        end
+        
+        %%
         % Extract a segment of data after joystick contact till specified
         % duration of reach 
         
         trial_start_time = onset_js(k)-0.05*Fs;
-        trial_end_time = trial_start_time + trial_duration + 0.1*Fs;
+        trial_end_time = trial_start_time + 0.3*Fs;
         radial_pos_trial = radial_position(trial_start_time:trial_end_time);
         mag_vel_trial = mag_vel(trial_start_time:trial_end_time);
         RoC_trial = RoC(trial_start_time:trial_end_time);
         
         onset_js_trial = 1*Fs - (onset_reward(k)-onset_js(k));
+        
+        %%
+        
         
         % Find local minima in radial velocity and RoC
         [min_vel,loc_vel] = findpeaks(-mag_vel_trial);
@@ -187,30 +224,30 @@ for j = 1:length(index_reward) %1:50 %3:32
                     time = -0.01:1/Fs:(reach_end_time-reach_start_time+0.01*Fs)/Fs; %[-0.05*Fs:end_time]./Fs;
                     time = time*1000;
             
-                    figure()
-                    subplot(3,1,1)
-                    plot(time,traj_x(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-                    ylabel('x-position (mm)')
-                    set(gca,'TickDir','out');
-                    set(gca,'box','off')
-                    hold on
-                    subplot(3,1,2)
-                    plot(time,traj_y(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-                    xlabel('Time (s)')
-                    ylabel('y-position (mm)')
-                    set(gca,'TickDir','out');
-                    set(gca,'box','off')
-                    hold on
-                    subplot(3,1,3)
-                    plot(time,radial_position(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-                    hold on
-                    plot([time(1) time(end)],[hold_threshold hold_threshold],'--','color','k','LineWidth',1)
-                    plot([time(1) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
-                    plot([time(1) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
-                    ylabel('radial distance (mm)')
-                    set(gca,'TickDir','out');
-                    set(gca,'box','off')
-                    
+%                     figure()
+%                     subplot(3,1,1)
+%                     plot(time,traj_x(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
+%                     ylabel('x-position (mm)')
+%                     set(gca,'TickDir','out');
+%                     set(gca,'box','off')
+%                     hold on
+%                     subplot(3,1,2)
+%                     plot(time,traj_y(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
+%                     xlabel('Time (s)')
+%                     ylabel('y-position (mm)')
+%                     set(gca,'TickDir','out');
+%                     set(gca,'box','off')
+%                     hold on
+%                     subplot(3,1,3)
+%                     plot(time,radial_position(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
+%                     hold on
+%                     plot([time(1) time(end)],[hold_threshold hold_threshold],'--','color','k','LineWidth',1)
+%                     plot([time(1) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
+%                     plot([time(1) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
+%                     ylabel('radial distance (mm)')
+%                     set(gca,'TickDir','out');
+%                     set(gca,'box','off')
+%                     
                     figure()
                     subplot(3,1,1)
                     plot(time,radial_position(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
@@ -261,4 +298,8 @@ cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 nTrial = length(peak_vel)
 figure()
 histogram(peak_vel,[20:5:200])
+ylabel('Peak Velocity (m/s)')
+
+figure()
+histogram(reach_duration,[5:5:200])
 ylabel('Peak Velocity (m/s)')

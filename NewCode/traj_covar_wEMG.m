@@ -146,3 +146,58 @@ xlabel('Time (sec)')
 
 
 
+A = cov(EMG_biceps_all-mean(EMG_biceps_all,2));
+[V,D] = eig(A);
+eig_values = diag(D);
+var_explained = round(eig_values./sum(eig_values),3);
+cumsum_var = cumsum(var_explained);
+idx = find(cumsum_var>0.1);
+idx = sort(idx,'descend');
+
+figure(4)
+subplot(2,1,1)
+patch([time_EMG fliplr(time_EMG)], [y_bi(:)-se_bi(:);  flipud(y_bi(:)+se_bi(:))], 'b', 'FaceAlpha',0.2, 'EdgeColor','none')
+hold on
+plot(time_EMG,mean(EMG_biceps_all),'LineWidth',2,'color','b')
+ylabel('Biceps EMG (V)')
+
+for j = 1:length(idx)
+    txt = ['\lambda' num2str(j) ' = ' num2str(var_explained(idx(j)))];
+    figure(4)
+    subplot(2,1,2)
+    plot(time_EMG,V(:,idx(j)),'LineWidth',2,'DisplayName',txt)
+    hold on
+    set(gca,'TickDir','out')
+    set(gca,'box','off')
+    
+end
+legend show
+
+
+A = cov(EMG_triceps_all-mean(EMG_triceps_all,2));
+[V,D] = eig(A);
+eig_values = diag(D);
+var_explained = round(eig_values./sum(eig_values),3);
+cumsum_var = cumsum(var_explained);
+idx = find(cumsum_var>0.1);
+idx = sort(idx,'descend');
+
+figure(5)
+subplot(2,1,1)
+patch([time_EMG fliplr(time_EMG)], [y_tri(:)-se_tri(:);  flipud(y_tri(:)+se_tri(:))], 'r', 'FaceAlpha',0.2, 'EdgeColor','none')
+hold on
+plot(time_EMG,mean(EMG_triceps_all),'LineWidth',2,'color','r')
+ylabel('Triceps EMG (V)')
+
+for j = 1:length(idx)
+    txt = ['\lambda' num2str(j) ' = ' num2str(var_explained(idx(j)))];
+    figure(5)
+    subplot(2,1,2)
+    plot(time_EMG,V(:,idx(j)),'LineWidth',2,'DisplayName',txt)
+    hold on
+    set(gca,'TickDir','out')
+    set(gca,'box','off')
+    
+end
+legend show
+

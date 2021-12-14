@@ -13,7 +13,7 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_2_AN04'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '112321_25_200_010_1000_010_020_060_300_060_300_000';
+data_ID = '112621_30_200_010_1000_010_020_060_300_060_300_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -53,7 +53,7 @@ max_angle = str2double(condition_array{9});
 
 theta = 0:0.01:2*pi;
 %%
-for j = 1:2 %length(index_reward) %1:50 %3:32
+for j = 1 %length(index_reward) %1:50 %3:32
     
     n = index_reward(j);
     %traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);
@@ -191,7 +191,7 @@ for j = 1:2 %length(index_reward) %1:50 %3:32
         x3=x+(6.35*cos(max_angle*pi/180+rot));
         y3=y+(6.35*sin(max_angle*pi/180+rot));
 
-        figure(101)
+        figure()
         plot(traj_x(start_time:end_time)*cos(rot) -traj_y(start_time:end_time)*sin(rot),traj_y(start_time:end_time)*cos(rot) + traj_x(start_time:end_time)*sin(rot) ,'LineWidth',1)
         hold on
         plot(traj_x(loc_vel+start_time)*cos(rot) -traj_y(loc_vel+start_time)*sin(rot),traj_y(loc_vel+start_time)*cos(rot) + traj_x(loc_vel+start_time)*sin(rot),'o','LineWidth',1)

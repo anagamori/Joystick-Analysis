@@ -4,9 +4,9 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\EMG\';
 mouse_ID = 'AN01'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '112321';
+data_ID = '120921';
 
-data_name = 'baseline';
+data_name = 'baseline_2';
 cd([data_folder mouse_ID '\' data_ID])
 load(data_name)
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
@@ -14,7 +14,7 @@ cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 Fs_EMG = 10000;
 
 lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
-    'PassbandFrequency',500,'PassbandRipple',0.2, ...
+    'PassbandFrequency',1000,'PassbandRipple',0.2, ...
     'SampleRate',Fs_EMG);
 
 hpFilt = designfilt('highpassiir','FilterOrder',8, ...
@@ -58,6 +58,7 @@ hold on
 plot(time,EMG_bi_filt)
 plot(time,EMG_bi_rect)
 plot(time,EMG_bi_smooth)
+ylim([-0.02 0.02])
 
 time = [1:length(EMG_tri)]./Fs_EMG;
 subplot(2,1,2)
@@ -66,6 +67,7 @@ hold on
 plot(time,EMG_tri_filt)
 plot(time,EMG_tri_rect)
 plot(time,EMG_tri_smooth)
+ylim([-0.02 0.02])
 [x,y] = ginput(2);
 figure()
 plot(f,pxx_bi)
