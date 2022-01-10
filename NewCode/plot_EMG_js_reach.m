@@ -4,7 +4,7 @@ clc
 
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_4_AN01_EMG'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+mouse_ID = 'Box_4_AN04'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
 data_ID = '120721_50_80_050_10000_010_010_000_180_000_180_001';
 % mouse_ID = 'Box_4_F_081921_CT_EMG'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
 % data_ID = '110721_60_80_050_0300_010_010_000_360_000_360_004';

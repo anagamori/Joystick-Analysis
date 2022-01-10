@@ -1,7 +1,7 @@
-%% reach_identification_bell_shaped.m
+%% create_js_reach.m
 %--------------------------------------------------------------------------
 % Author: Akira Nagamori
-% Last update: 11/8/21
+% Last update: 1/9/21
 % Descriptions:
 %--------------------------------------------------------------------------
 %%
@@ -11,7 +11,7 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_4_AN05'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+mouse_ID = 'Box_4_AN04'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
 data_ID = '010922_60_80_030_10000_010_010_000_180_000_180_001';
 condition_array = strsplit(data_ID,'_');
 
@@ -183,7 +183,7 @@ for j = 1:length(index_reward) %1:50 %3:32
         %%
         % Extract a segment of data after joystick contact till specified
         % duration of reach 
-        if  onset_js(k)-0.05*Fs < 0
+        if  onset_js(k)-0.2*Fs < 0
             trial_start_time =  1;
         else
             trial_start_time =  onset_reward(k)-0.2*Fs;
@@ -243,31 +243,7 @@ for j = 1:length(index_reward) %1:50 %3:32
                 if plotOpt == 1
                     time = -0.01:1/Fs:(reach_end_time-reach_start_time+0.01*Fs)/Fs; %[-0.05*Fs:end_time]./Fs;
                     time = time*1000;
-            
-%                     figure()
-%                     subplot(3,1,1)
-%                     plot(time,traj_x(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-%                     ylabel('x-position (mm)')
-%                     set(gca,'TickDir','out');
-%                     set(gca,'box','off')
-%                     hold on
-%                     subplot(3,1,2)
-%                     plot(time,traj_y(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-%                     xlabel('Time (s)')
-%                     ylabel('y-position (mm)')
-%                     set(gca,'TickDir','out');
-%                     set(gca,'box','off')
-%                     hold on
-%                     subplot(3,1,3)
-%                     plot(time,radial_position(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-%                     hold on
-%                     plot([time(1) time(end)],[hold_threshold hold_threshold],'--','color','k','LineWidth',1)
-%                     plot([time(1) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
-%                     plot([time(1) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
-%                     ylabel('radial distance (mm)')
-%                     set(gca,'TickDir','out');
-%                     set(gca,'box','off')
-%                     
+                      
                     figure()
                     subplot(3,1,1)
                     plot(time,radial_position(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)

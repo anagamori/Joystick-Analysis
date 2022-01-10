@@ -17,7 +17,7 @@ clc
 data_folder = 'D:\JoystickExpts\data\EMG\';
 code_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode';
 mouse_ID = 'AN01';
-data_ID = '120921';
+data_ID = '120721';
 
 data_name = 'data';
 cd([data_folder mouse_ID '\' data_ID])
@@ -37,7 +37,7 @@ hpFilt = designfilt('highpassiir','FilterOrder',4, ...
     'SampleRate',Fs_EMG);
 
 lpFilt2 = designfilt('lowpassiir','FilterOrder',4, ...
-    'PassbandFrequency',30,'PassbandRipple',0.2, ...
+    'PassbandFrequency',50,'PassbandRipple',0.2, ...
     'SampleRate',Fs_EMG);
 
 trialDuration = 1.5*Fs_EMG;
@@ -107,19 +107,19 @@ for i = 1:nTrial
     hold on
     
     % optional if you suspect any change in noise level throughout recording session 
-    str = input('Is noise level acceptable','s');
-    
-    if strcmp(str,'y')
-        flag_noise(i) = 1;
-    else
-        flag_noise(i) = 0;
-    end
-    close all
+%     str = input('Is noise level acceptable','s');
+%     
+%     if strcmp(str,'y')
+%         flag_noise(i) = 1;
+%     else
+%         flag_noise(i) = 0;
+%     end
+%     close all
     
 end
 
 % Save data structure on the same folder as the raw data
 cd([data_folder mouse_ID '\' data_ID])
 save([data_name '_processed'],'EMG_struct')
-save('flag_noise','flag_noise')
+%save('flag_noise','flag_noise')
 cd(code_folder)

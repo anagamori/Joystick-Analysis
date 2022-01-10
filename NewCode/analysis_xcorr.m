@@ -22,19 +22,20 @@ load('data_processed')
 load('flag_noise')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
-start_offset = -0.1;
-end_time = 0.0;
+start_offset = -0.15;
+end_time = 0.05;
 Fs_js = 1000;
-time_js = start_offset:1/Fs_js:end_time;
+time_js = start_offset+1/Fs_js:1/Fs_js:end_time;
 %time_js(end) = [];
 Fs_EMG = 10000;
-time_EMG = start_offset:1/Fs_EMG:end_time;
+time_EMG = start_offset+1/Fs_EMG:1/Fs_EMG:end_time;
 %time_EMG(end) = [];
 nTrial = length(js_reach);
 
 
-analysis_window_js = [start_offset*Fs_js:end_time*Fs_js]+1*Fs_js;
-analysis_window_EMG = [start_offset*Fs_EMG:end_time*Fs_EMG]+1*Fs_EMG;
+analysis_window_js = [start_offset*Fs_js+1:end_time*Fs_js]+1*Fs_js;
+analysis_window_EMG = [start_offset*Fs_EMG+1:end_time*Fs_EMG]+1*Fs_EMG;
+window_size = end_time-start_offset;
 
 radial_pos_all = [];
 js_vel_all = [];
@@ -79,21 +80,21 @@ for i = 1:length(index_js_reach) %nTrial
         EMG_triceps = EMG_struct(k).triceps_zscore(analysis_window_EMG);
         EMG_triceps_ds = downsample(EMG_triceps,10);
         
-        [r,lags] = xcorr(EMG_triceps-mean(EMG_triceps),EMG_biceps-mean(EMG_biceps),0.2*Fs_EMG,'coeff');
+        [r,lags] = xcorr(EMG_triceps-mean(EMG_triceps),EMG_biceps-mean(EMG_biceps),window_size*Fs_EMG,'coeff');
         r_all = [r_all r];
         
-        [r_bi_js_pos,] = xcorr(EMG_biceps_ds-mean(EMG_biceps_ds),radial_pos-mean(radial_pos),0.2*Fs_js,'coeff');        
-        [r_tri_js_pos,~] = xcorr(EMG_triceps_ds-mean(EMG_triceps_ds),radial_pos-mean(radial_pos),0.2*Fs_js,'coeff');
+        [r_bi_js_pos,] = xcorr(EMG_biceps_ds-mean(EMG_biceps_ds),radial_pos-mean(radial_pos),window_size*Fs_js,'coeff');        
+        [r_tri_js_pos,~] = xcorr(EMG_triceps_ds-mean(EMG_triceps_ds),radial_pos-mean(radial_pos),window_size*Fs_js,'coeff');
         r_bi_js_pos_all = [r_bi_js_pos_all r_bi_js_pos];
         r_tri_js_pos_all = [r_tri_js_pos_all r_tri_js_pos];
         
-        [r_bi_js_vel,lags_js] = xcorr(EMG_biceps_ds-mean(EMG_biceps_ds),js_vel-mean(js_vel),0.2*Fs_js,'coeff');
-        [r_tri_js_vel,~] = xcorr(EMG_triceps_ds-mean(EMG_triceps_ds),js_vel-mean(js_vel),0.2*Fs_js,'coeff');
+        [r_bi_js_vel,lags_js] = xcorr(EMG_biceps_ds-mean(EMG_biceps_ds),js_vel-mean(js_vel),window_size*Fs_js,'coeff');
+        [r_tri_js_vel,~] = xcorr(EMG_triceps_ds-mean(EMG_triceps_ds),js_vel-mean(js_vel),window_size*Fs_js,'coeff');
         r_bi_js_vel_all = [r_bi_js_vel_all r_bi_js_vel];
         r_tri_js_vel_all = [r_tri_js_vel_all r_tri_js_vel];
         
-        [r_bi_js_acc,~] = xcorr(EMG_biceps_ds-mean(EMG_biceps_ds),js_acc-mean(js_acc),0.2*Fs_js,'coeff');
-        [r_tri_js_acc,~] = xcorr(EMG_triceps_ds-mean(EMG_triceps_ds),js_acc-mean(js_acc),0.2*Fs_js,'coeff');
+        [r_bi_js_acc,~] = xcorr(EMG_biceps_ds-mean(EMG_biceps_ds),js_acc-mean(js_acc),window_size*Fs_js,'coeff');
+        [r_tri_js_acc,~] = xcorr(EMG_triceps_ds-mean(EMG_triceps_ds),js_acc-mean(js_acc),window_size*Fs_js,'coeff');
         r_bi_js_acc_all = [r_bi_js_acc_all r_bi_js_acc];
         r_tri_js_acc_all = [r_tri_js_acc_all r_tri_js_acc];
         
@@ -102,6 +103,7 @@ for i = 1:length(index_js_reach) %nTrial
         
         EMG_biceps_raw_all = [EMG_biceps_raw_all; EMG_struct(k).biceps_raw(analysis_window_EMG)'];
         EMG_triceps_raw_all = [EMG_triceps_raw_all; EMG_struct(k).triceps_raw(analysis_window_EMG)'];
+        
         figure(1)
         ax1 = subplot(3,1,1);
         plot1 = plot(time_js,js_reach(j).radial_pos_2(analysis_window_js),'LineWidth',1,'color','k');
@@ -166,6 +168,50 @@ for i = 1:length(index_js_reach) %nTrial
         set(gca,'TickDir','out')
         set(gca,'box','off')
         linkaxes([ax1 ax2],'x')
+        
+        figure(5)
+        subplot(2,1,1)
+        plot1 = plot(lags_js/Fs_js*1000,r_bi_js_pos,'LineWidth',1,'color','b');
+        plot1.Color(4) = 0.3;
+        hold on
+        subplot(2,1,2)
+        plot1 = plot(lags_js/Fs_js*1000,r_tri_js_pos,'LineWidth',1,'color','r');
+        plot1.Color(4) = 0.3;
+        hold on
+        set(gca,'TickDir','out')
+        set(gca,'box','off')
+        
+        figure(6)
+        subplot(2,1,1)
+        plot1 = plot(lags_js/Fs_js*1000,r_bi_js_vel,'LineWidth',1,'color','b');
+        plot1.Color(4) = 0.3;
+        hold on
+        subplot(2,1,2)
+        plot1 = plot(lags_js/Fs_js*1000,r_tri_js_vel,'LineWidth',1,'color','r');
+        plot1.Color(4) = 0.3;
+        hold on
+        set(gca,'TickDir','out')
+        set(gca,'box','off')
+        
+        figure(7)
+        subplot(2,1,1)
+        plot1 = plot(lags_js/Fs_js*1000,r_bi_js_acc,'LineWidth',1,'color','b');
+        plot1.Color(4) = 0.3;
+        hold on
+        subplot(2,1,2)
+        plot1 = plot(lags_js/Fs_js*1000,r_tri_js_acc,'LineWidth',1,'color','r');
+        plot1.Color(4) = 0.3;
+        hold on
+        set(gca,'TickDir','out')
+        set(gca,'box','off')
+        
+        figure(8)
+        plot1 = plot(lags/Fs_EMG*1000,r,'LineWidth',1,'color','k');
+        plot1.Color(4) = 0.3;
+        hold on
+        set(gca,'TickDir','out')
+        set(gca,'box','off')
+        
     end
    end
 end
@@ -234,28 +280,40 @@ xlabel('Time (sec)')
 %
 
 figure(5)
-plot(lags_js/Fs_js*1000,mean(r_bi_js_pos,2),'LineWidth',2,'color','b')
-hold on 
-plot(lags_js/Fs_js*1000,mean(r_tri_js_pos,2),'LineWidth',2,'color','r')
+subplot(2,1,1)
+title('Position')
+plot(lags_js/Fs_js*1000,mean(r_bi_js_pos_all,2),'LineWidth',2,'color','b')
 set(gca,'TickDir','out')
 set(gca,'box','off')
-title('Position')
+subplot(2,1,2)
+plot(lags_js/Fs_js*1000,mean(r_tri_js_pos_all,2),'LineWidth',2,'color','r')
+set(gca,'TickDir','out')
+set(gca,'box','off')
+
 
 figure(6)
-plot(lags_js/Fs_js*1000,mean(r_bi_js_vel,2),'LineWidth',2,'color','b')
-hold on 
-plot(lags_js/Fs_js*1000,mean(r_tri_js_vel,2),'LineWidth',2,'color','r')
+subplot(2,1,1)
+title('Velocity')
+plot(lags_js/Fs_js*1000,mean(r_bi_js_vel_all,2),'LineWidth',2,'color','b')
 set(gca,'TickDir','out')
 set(gca,'box','off')
-title('Velocity')
+subplot(2,1,2)
+plot(lags_js/Fs_js*1000,mean(r_tri_js_vel_all,2),'LineWidth',2,'color','r')
+set(gca,'TickDir','out')
+set(gca,'box','off')
+
 
 figure(7)
-plot(lags_js/Fs_js*1000,mean(r_bi_js_acc,2),'LineWidth',2,'color','b')
-hold on 
-plot(lags_js/Fs_js*1000,mean(r_tri_js_acc,2),'LineWidth',2,'color','r')
+subplot(2,1,1)
+title('Acceleration')
+plot(lags_js/Fs_js*1000,mean(r_bi_js_acc_all,2),'LineWidth',2,'color','b')
 set(gca,'TickDir','out')
 set(gca,'box','off')
-title('Acceleration')
+subplot(2,1,2)
+plot(lags_js/Fs_js*1000,mean(r_tri_js_acc_all,2),'LineWidth',2,'color','r')
+set(gca,'TickDir','out')
+set(gca,'box','off')
+
 
 figure(8)
 plot(lags/Fs_EMG*1000,mean(r_all,2),'LineWidth',2,'color','k')

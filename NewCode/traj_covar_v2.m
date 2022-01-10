@@ -19,22 +19,24 @@ EMG_biceps_all = [];
 EMG_triceps_all = [];
 EMG_biceps_raw_all = [];
 EMG_triceps_raw_all = [];
-for j = 1:2
+for j = 1:3
     if j == 1
-        mouse_ID = 'Box_4_F_081921_CT_EMG_2'; 
-        data_ID = '110621_60_80_050_0300_010_010_000_360_000_360_000';
+        mouse_ID = 'Box_4_AN04'; %'Box_4_F_081921_CT_EMG_2'; 
+        data_ID = '122121_60_80_030_10000_010_010_000_180_000_180_001'; %'110621_60_80_050_0300_010_010_000_360_000_360_000';
         
-        cd([data_folder mouse_ID '\' data_ID])
-        load('js_reach')
-        cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
-        mouse_ID = 'Box_4_F_081921_CT_EMG'; 
-        data_ID = '110721_60_80_050_0300_010_010_000_360_000_360_004';
         
-        cd([data_folder mouse_ID '\' data_ID])
-        load('js_reach')
-        cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
+    elseif j == 2
+        mouse_ID = 'Box_4_AN04'; 
+        data_ID = '122221_60_80_030_10000_010_010_000_180_000_180_001';
+        
+    elseif j == 3
+        mouse_ID = 'Box_4_AN04'; 
+        data_ID = '122321_60_80_030_10000_010_010_000_180_000_180_001';
             
     end
+    cd([data_folder mouse_ID '\' data_ID])
+        load('js_reach')
+        cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
     condition_array = strsplit(data_ID,'_');
     hold_threshold = str2double(condition_array{7})/100*6.35;
     outer_threshold = str2double(condition_array{2})/100*6.35;
@@ -57,7 +59,7 @@ for j = 1:2
         
     end
 end
-A = cov(radial_pos_demean_all);
+A = cov(radial_pos_all-mean(radial_pos_all,1));
 [V,D] = eig(A);
 eig_values = diag(D);
 var_explained = round(eig_values./sum(eig_values),3);
@@ -77,10 +79,18 @@ for j = 1:length(idx)
     txt = ['\lambda' num2str(j) ' = ' num2str(var_explained(idx(j)))];
     figure(1)
     subplot(2,1,2)
-    plot(time_js,V(:,idx(j)),'LineWidth',2,'DisplayName',txt)
-    hold on
-    set(gca,'TickDir','out')
-    set(gca,'box','off')
+    [val,loc] = max(abs(V(:,idx(j))));
+    if V(loc,idx(j))<0
+        plot(time_js,-V(:,idx(j)),'LineWidth',2,'DisplayName',txt)
+        hold on
+        set(gca,'TickDir','out')
+        set(gca,'box','off')
+    else
+        plot(time_js,V(:,idx(j)),'LineWidth',2,'DisplayName',txt)
+        hold on
+        set(gca,'TickDir','out')
+        set(gca,'box','off')
+    end
     
 end
 legend show
