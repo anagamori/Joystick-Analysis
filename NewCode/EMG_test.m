@@ -4,9 +4,9 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'AN05\'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '012422';
+data_ID = 'test';
 
-data_name = 'baseline';
+data_name = 'temp';
 cd([data_folder mouse_ID '\EMG\' data_ID])
 load(data_name)
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
@@ -14,7 +14,7 @@ cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 Fs_EMG = 10000;
 
 lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
-    'PassbandFrequency',1000,'PassbandRipple',0.2, ...
+    'PassbandFrequency',500,'PassbandRipple',0.2, ...
     'SampleRate',Fs_EMG);
 
 hpFilt = designfilt('highpassiir','FilterOrder',8, ...
@@ -29,8 +29,8 @@ lpFilt2 = designfilt('lowpassiir','FilterOrder',8, ...
 % nTrial = Ch3.length;
 % trigger = round(Ch3.times*Fs_EMG);
 
-EMG_bi = bicep.values;
-EMG_tri = tricep.values;
+EMG_bi = tri.values(0.8e6:end);
+EMG_tri = trap.values(0.8e6:end);
 
 EMG_bi_filt = filtfilt(lpFilt,EMG_bi);
 EMG_tri_filt = filtfilt(lpFilt,EMG_tri);
@@ -54,33 +54,33 @@ time = [1:length(EMG_bi)]./Fs_EMG;
 figure(1)
 subplot(2,1,1)
 plot(time,EMG_bi)
-hold on 
+hold on
 plot(time,EMG_bi_filt)
 plot(time,EMG_bi_rect)
 plot(time,EMG_bi_smooth)
-ylim([-0.02 0.02])
+%ylim([-0.02 0.02])
 
 time = [1:length(EMG_tri)]./Fs_EMG;
 subplot(2,1,2)
 plot(time,EMG_tri)
-hold on 
+hold on
 plot(time,EMG_tri_filt)
 plot(time,EMG_tri_rect)
 plot(time,EMG_tri_smooth)
-ylim([-0.02 0.02])
+%ylim([-0.02 0.02])
 [x,y] = ginput(2);
 figure()
 plot(f,pxx_bi)
-hold on 
+hold on
 plot(f,pxx_bi_filt)
 
 figure()
 plot(f,pxx_tri)
-hold on 
+hold on
 plot(f,pxx_tri_filt)
 
-baseline_mean = [mean(EMG_bi_smooth(round(x(1)*Fs_EMG):round(x(2)*Fs_EMG))) mean(EMG_tri_smooth(round(x(1)*Fs_EMG):round(x(2)*Fs_EMG)))]; 
-baseline_sd = [std(EMG_bi_smooth(round(x(1)*Fs_EMG):round(x(2)*Fs_EMG))) std(EMG_tri_smooth(round(x(1)*Fs_EMG):round(x(2)*Fs_EMG)))]; 
+baseline_mean = [mean(EMG_bi_smooth(round(x(1)*Fs_EMG):round(x(2)*Fs_EMG))) mean(EMG_tri_smooth(round(x(1)*Fs_EMG):round(x(2)*Fs_EMG)))];
+baseline_sd = [std(EMG_bi_smooth(round(x(1)*Fs_EMG):round(x(2)*Fs_EMG))) std(EMG_tri_smooth(round(x(1)*Fs_EMG):round(x(2)*Fs_EMG)))];
 
 time = [1:length(EMG_bi)]./Fs_EMG;
 figure()
@@ -89,17 +89,12 @@ plot(time,EMG_bi_smooth)
 ylim([0 0.02])
 ylabel('Biceps')
 set(gca,'TickDir','out')
-       set(gca,'box','off')
-       time = [1:length(EMG_tri)]./Fs_EMG;
+set(gca,'box','off')
+time = [1:length(EMG_tri)]./Fs_EMG;
 
 subplot(2,1,2)
 plot(time,EMG_tri_smooth)
 ylim([0 0.02])
 ylabel('Triceps')
 set(gca,'TickDir','out')
-       set(gca,'box','off')
-
-cd([data_folder mouse_ID '\EMG\' data_ID])
-save('baseline_mean','baseline_mean')
-save('baseline_sd','baseline_sd')
-cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
+set(gca,'box','off')

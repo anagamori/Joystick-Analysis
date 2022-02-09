@@ -14,13 +14,13 @@ close all
 clear all
 clc
 
-data_folder = 'D:\JoystickExpts\data\EMG\';
+data_folder = 'D:\JoystickExpts\data\';
 code_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode';
-mouse_ID = 'AN01';
-data_ID = '120721';
+mouse_ID = 'AN05';
+data_ID = '012422';
 
 data_name = 'data';
-cd([data_folder mouse_ID '\' data_ID])
+cd([data_folder mouse_ID '\EMG\' data_ID])
 load(data_name)
 load('baseline_mean')
 load('baseline_sd')
@@ -29,11 +29,11 @@ cd(code_folder)
 Fs_EMG = 10000;
 
 lpFilt = designfilt('lowpassiir','FilterOrder',4, ...
-    'PassbandFrequency',1000,'PassbandRipple',0.2, ...
+    'PassbandFrequency',500,'PassbandRipple',0.2, ...
     'SampleRate',Fs_EMG);
 
 hpFilt = designfilt('highpassiir','FilterOrder',4, ...
-    'PassbandFrequency',200,'PassbandRipple',0.2, ...
+    'PassbandFrequency',100,'PassbandRipple',0.2, ...
     'SampleRate',Fs_EMG);
 
 lpFilt2 = designfilt('lowpassiir','FilterOrder',4, ...
@@ -56,6 +56,8 @@ EMG_tri_filt = filtfilt(hpFilt,EMG_tri_filt);
 EMG_bi_rect = abs(EMG_bi_filt); 
 EMG_tri_rect = abs(EMG_tri_filt);
 
+% EMG_bi_smooth = filtfilt(lpFilt2,EMG_bi_rect); %-baseline_mean(1))./baseline_sd(1);
+% EMG_tri_smooth = filtfilt(lpFilt2,EMG_tri_rect); %-baseline_mean(2))./baseline_sd(2);
 EMG_bi_smooth = (filtfilt(lpFilt2,EMG_bi_rect)-baseline_mean(1))./baseline_sd(1);
 EMG_tri_smooth = (filtfilt(lpFilt2,EMG_tri_rect)-baseline_mean(2))./baseline_sd(2);
 
@@ -107,19 +109,19 @@ for i = 1:nTrial
     hold on
     
     % optional if you suspect any change in noise level throughout recording session 
-%     str = input('Is noise level acceptable','s');
-%     
-%     if strcmp(str,'y')
-%         flag_noise(i) = 1;
-%     else
-%         flag_noise(i) = 0;
-%     end
-%     close all
+    str = input('Is noise level acceptable','s');
+    
+    if strcmp(str,'y')
+        flag_noise(i) = 1;
+    else
+        flag_noise(i) = 0;
+    end
+    close all
     
 end
 
 % Save data structure on the same folder as the raw data
-cd([data_folder mouse_ID '\' data_ID])
+cd([data_folder mouse_ID '\EMG\' data_ID])
 save([data_name '_processed'],'EMG_struct')
-%save('flag_noise','flag_noise')
+save('flag_noise','flag_noise')
 cd(code_folder)

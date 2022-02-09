@@ -11,8 +11,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_4_AN04'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '010922_60_80_030_10000_010_010_000_180_000_180_001';
+mouse_ID = 'Box_2_AN04'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+data_ID = '020722_63_100_005_10000_010_020_000_180_000_180_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -28,11 +28,11 @@ peak_vel = [];
 Fs = 1000;
 
 lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
-    'PassbandFrequency',10,'PassbandRipple',0.2, ...
+    'PassbandFrequency',10,'PassbandRipple',0.05, ...
     'SampleRate',Fs);
 
 lpFilt2 = designfilt('lowpassiir','FilterOrder',8, ...
-    'PassbandFrequency',50,'PassbandRipple',0.2, ...
+    'PassbandFrequency',50,'PassbandRipple',0.05, ...
     'SampleRate',Fs);
 
 index_reward = [];
@@ -85,18 +85,18 @@ for j = 1:length(index_reward) %1:50 %3:32
     
     % Preprocessing of x- and y-trajectory data
     traj_x = filtfilt(lpFilt,jstruct(n).traj_x/100*6.35);
-    vel_x = [0 diff(traj_x)*Fs];
-    acc_x = [0 diff(vel_x)*Fs];
+    vel_x = gradient(traj_x)*Fs; %[0 diff(traj_x)*Fs];
+    acc_x = gradient(vel_x)*Fs; %[0 diff(vel_x)*Fs];
     traj_y = filtfilt(lpFilt,jstruct(n).traj_y/100*6.35);
-    vel_y = [0 diff(traj_y)*Fs];
-    acc_y = [0 diff(vel_y)*Fs];
+    vel_y = gradient(traj_y)*Fs;
+    acc_y = gradient(vel_x)*Fs;
     
-    traj_x_2 = jstruct(n).traj_x/100*6.35; %filtfilt(lpFilt2,jstruct(n).traj_x/100*6.35);
-    vel_x_2 = [0 diff(traj_x_2)*Fs];
-    acc_x_2 = [0 diff(vel_x_2)*Fs];
-    traj_y_2 = jstruct(n).traj_y/100*6.35; %filtfilt(lpFilt2,jstruct(n).traj_y/100*6.35);
-    vel_y_2 = [0 diff(traj_y_2)*Fs];
-    acc_y_2 = [0 diff(vel_y_2)*Fs];
+    traj_x_2 = filtfilt(lpFilt2,jstruct(n).traj_x/100*6.35);
+    vel_x_2 = gradient(traj_x_2)*Fs;
+    acc_x_2 = gradient(vel_x_2)*Fs;
+    traj_y_2 = filtfilt(lpFilt2,jstruct(n).traj_y/100*6.35);
+    vel_y_2 = gradient(traj_y_2)*Fs;
+    acc_y_2 = gradient(vel_y_2)*Fs;
     % Compute higher-order statistics
     radial_position = sqrt(traj_x.^2+traj_y.^2); % Radial position
     RoC = (vel_x.^2 + vel_y.^2).^(3/2)./abs(vel_x.*acc_y-vel_y.*acc_x); % Radius of curvature
@@ -160,128 +160,7 @@ for j = 1:length(index_reward) %1:50 %3:32
             js_reach(n_successful_trial).mag_vel_2 = mag_vel_2(recording_start_time:recording_end_time);
             js_reach(n_successful_trial).RoC_2 = RoC_2(recording_start_time:recording_end_time);
         end
-        
-        
-        %% Reach duration
-        if  onset_reward(k)-0.2*Fs < 0
-            trial_start_time =  1;
-        else
-            trial_start_time =  onset_reward(k)-0.2*Fs;
-        end
-        trial_end_time = onset_reward(k);
-        radial_pos_trial = radial_position_2(trial_start_time:trial_end_time);
-        zx_hold_threshold = zci(radial_pos_trial - hold_threshold);
-        zx_target_threshold = zci(radial_pos_trial - outer_threshold);
-        zx_hold_threshold(zx_hold_threshold==length(radial_pos_trial)) = [];
-        zx_target_threshold(zx_target_threshold==length(radial_pos_trial)) = [];
-        if ~isempty(zx_hold_threshold) && ~isempty(zx_target_threshold)
-            reach_duration = [reach_duration zx_target_threshold(1) - zx_hold_threshold(end)];
-        else
-            reach_duration = [reach_duration nan];
-        end
-        
-        %%
-        % Extract a segment of data after joystick contact till specified
-        % duration of reach 
-        if  onset_js(k)-0.2*Fs < 0
-            trial_start_time =  1;
-        else
-            trial_start_time =  onset_reward(k)-0.2*Fs;
-        end
-       
-        trial_end_time = trial_start_time + 0.3*Fs;
-        radial_pos_trial = radial_position(trial_start_time:trial_end_time);
-        mag_vel_trial = mag_vel(trial_start_time:trial_end_time);
-        RoC_trial = RoC(trial_start_time:trial_end_time);
-        
-        onset_js_trial = 1*Fs - (onset_reward(k)-onset_js(k));
-        
-        %%
-        
-        
-        % Find local minima in radial velocity and RoC
-        [min_vel,loc_vel] = findpeaks(-mag_vel_trial);
-        [min_RoC,loc_RoC] = findpeaks(-RoC_trial);
-        
-        % Find local minima in RoC that coincided (within 5 ms difference) with local minima in
-        % radial velocity
-        A = repmat(loc_RoC',[1 length(loc_vel)]);
-        [minValue,closestIndex] = min(abs(A-loc_vel),[],1);
-        loc_vel(minValue>5) = [];
-        closestIndex(minValue>5) = [];
-        
-        % Find velocity peaks
-        [max_vel,loc_max_vel] = findpeaks(mag_vel_trial);
-        
-        % Identify reach start
-        % criteria: radial position corresponding to local minimum of both
-        % velocity magnitude and RoC, which is also within the hold
-        % threshold
-        reach_start_time_index = find(radial_pos_trial(loc_vel)<hold_threshold);
-        if ~isempty(reach_start_time_index)
-            % reach start time w.r.t recording start time
-            reach_start_time = loc_vel(reach_start_time_index(end));
-            js_reach(n_successful_trial).reach_start_time = loc_vel(reach_start_time_index(end))+ onset_js_trial - 0.05*Fs;
-        end
-        
-        %
-        reach_end_time_index = find(radial_pos_trial(loc_vel)>=outer_threshold&radial_pos_trial(loc_vel)<=max_distance);
-        if ~isempty(reach_end_time_index)
-            reach_end_time = loc_vel(reach_end_time_index(end));
-            js_reach(n_successful_trial).reach_end_time = loc_vel(reach_end_time_index(end)) + onset_js_trial - 0.05*Fs;
-        end
-        
-        if ~isempty(reach_start_time_index)&&~isempty(reach_end_time_index)
-            % find velocity peaks between reach start and end times 
-            loc_max_vel_reach = find(loc_max_vel>reach_start_time&loc_max_vel<reach_end_time);        
-            n_vel_peak = length(loc_max_vel_reach);
-                 
-            if n_vel_peak == 1
-                js_reach(n_successful_trial).n_vel_peak_1 = 1;             
-                peak_vel = [peak_vel max_vel(loc_max_vel_reach)];
-                
-                if plotOpt == 1
-                    time = -0.01:1/Fs:(reach_end_time-reach_start_time+0.01*Fs)/Fs; %[-0.05*Fs:end_time]./Fs;
-                    time = time*1000;
-                      
-                    figure()
-                    subplot(3,1,1)
-                    plot(time,radial_position(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-                    hold on
-                    plot([time(1) time(end)],[hold_threshold hold_threshold],'--','color','k','LineWidth',1)
-                    plot([time(1) time(end)],[outer_threshold outer_threshold],'color','g','LineWidth',1)
-                    plot([time(1) time(end)],[max_distance max_distance],'color','g','LineWidth',1)
-                    ylabel('Radial Position (mm)')
-                    set(gca,'TickDir','out');
-                    set(gca,'box','off')
-                    subplot(3,1,2)
-                    plot(time,mag_vel(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-                    ylabel('Radial Velocity (mm/s)')
-                    set(gca,'TickDir','out');
-                    set(gca,'box','off')
-                    subplot(3,1,3)
-                    semilogy(time,RoC(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-                    xlabel('Time (ms)')
-                    ylabel('Raidus of Curvature')
-                    set(gca,'TickDir','out');
-                    set(gca,'box','off')
-                    %
-                    figure(101)
-                    plot(traj_x(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),traj_y(reach_start_time-0.01*Fs+trial_start_time:reach_end_time+0.01*Fs+trial_start_time),'LineWidth',1)
-                    xlim([-7 7])
-                    ylim([-7 7])
-                    set(gca,'TickDir','out')
-                    set(gca,'box','off')
-                    hold on
-                    plot(hold_threshold*cos(theta),hold_threshold*sin(theta),'--','color','k')
-                    plot(outer_threshold*cos(theta),outer_threshold*sin(theta),'color','g')
-                    plot(max_distance*cos(theta),max_distance*sin(theta),'color','g')
-                    axis equal
-                end
-            else
-                js_reach(n_successful_trial).n_vel_peak_1 = 0;
-            end
-        end
+    
         
     end
 end
@@ -289,13 +168,3 @@ end
 cd([data_folder mouse_ID '\' data_ID])
 save('js_reach','js_reach')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
-
-%%
-nTrial = length(peak_vel)
-figure()
-histogram(peak_vel,[20:5:200])
-ylabel('Peak Velocity (m/s)')
-
-figure()
-histogram(reach_duration,[5:5:200])
-ylabel('Reach Duration (ms)')
