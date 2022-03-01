@@ -12,7 +12,7 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_2_AN04'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '020722_63_100_005_10000_010_020_000_180_000_180_000';
+data_ID = '020822_63_79_020_10000_010_020_000_180_000_180_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])

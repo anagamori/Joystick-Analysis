@@ -11,8 +11,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_2_AN04'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '020722_63_100_005_10000_010_020_000_180_000_180_000';
+mouse_ID = 'Box_4_AN07'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+data_ID = '022522_63_79_020_10000_010_016_000_180_000_180_000';
 condition_array = strsplit(data_ID,'_');
 
 hold_threshold = str2double(condition_array{7})/100*6.35;
@@ -20,6 +20,7 @@ outer_threshold = str2double(condition_array{2})/100*6.35;
 max_distance = str2double(condition_array{3})/100*6.35;
 hold_duration = str2double(condition_array{6});
 trial_duration = str2double(condition_array{5});
+theta = 0:0.01:2*pi;
 
 cd([data_folder mouse_ID '\' data_ID])
 load('js_reach')
@@ -30,10 +31,9 @@ plotOpt = 1;
 Fs = 1000;
 
 nTrial = length(js_reach);
+flag = [];
 %%
 for n =  1:nTrial
-    
-    %%
     
     trial_start_time =  1*Fs-0.25*Fs+1; 
     trial_end_time = 1*Fs + 0.3*Fs;
@@ -53,6 +53,8 @@ for n =  1:nTrial
     closestIndex(minValue>6) = [];
     
     radial_pos_2_trial = js_reach(n).radial_pos_2(trial_start_time:trial_end_time);
+    traj_x_2_trial = js_reach(n).traj_x_2(trial_start_time:trial_end_time);
+    traj_y_2_trial = js_reach(n).traj_y_2(trial_start_time:trial_end_time);
     mag_vel_2_trial = js_reach(n).mag_vel_2(trial_start_time:trial_end_time);
     RoC_2_trial = js_reach(n).RoC_2(trial_start_time:trial_end_time);
     
@@ -101,13 +103,13 @@ for n =  1:nTrial
         max_pos(n) = max(radial_pos_2_trial(reach_start_idx:reach_end_idx));
         reach_duration(n) = reach_end_idx - reach_start_idx;
 
-        figure(1+n)
-        plot(time_reach,radial_pos_trial(reach_start_idx-0.01*Fs:reach_end_idx+0.02*Fs),'b','LineWidth',1)
-        hold on
-        plot(time_reach,radial_pos_2_trial(reach_start_idx-0.01*Fs:reach_end_idx+0.02*Fs),'r','LineWidth',1)
-        yline(hold_threshold,'--','color','k','LineWidth',2)
-        yline(outer_threshold,'color','g','LineWidth',2)
-        yline(max_distance,'color','g','LineWidth',2)
+%         figure(1+n)
+%         plot(time_reach,radial_pos_trial(reach_start_idx-0.01*Fs:reach_end_idx+0.02*Fs),'b','LineWidth',1)
+%         hold on
+%         plot(time_reach,radial_pos_2_trial(reach_start_idx-0.01*Fs:reach_end_idx+0.02*Fs),'r','LineWidth',1)
+%         yline(hold_threshold,'--','color','k','LineWidth',2)
+%         yline(outer_threshold,'color','g','LineWidth',2)
+%         yline(max_distance,'color','g','LineWidth',2)
         
         figure(1)
         plot(time_reach,radial_pos_2_trial(reach_start_idx-0.01*Fs:reach_end_idx+0.02*Fs),'k','LineWidth',1)
@@ -116,7 +118,25 @@ for n =  1:nTrial
         yline(outer_threshold,'color','g','LineWidth',2)
         yline(max_distance,'color','g','LineWidth',2)
         
+        figure(2)
+        plot(traj_x_2_trial(reach_start_idx-0.01*Fs:reach_end_idx+0.02*Fs),traj_y_2_trial(reach_start_idx-0.01*Fs:reach_end_idx+0.02*Fs),'LineWidth',1)
+        xlim([-7 7])
+        ylim([-7 7])
+        set(gca,'TickDir','out')
+        set(gca,'box','off')
+        hold on
+        plot(hold_threshold*cos(theta),hold_threshold*sin(theta),'--','color','k')
+        plot(outer_threshold*cos(theta),outer_threshold*sin(theta),'color','g')
+        plot(max_distance*cos(theta),max_distance*sin(theta),'color','g')
+        axis equal
+                    
         js_reach(n).reach_flag = [];
+        
+        prompt = 'Any issue (y/n)? ';
+        res_trial = input(prompt,'s');
+        if res_trial == 'y'
+            flag = [flag n];
+        end
     else
         js_reach(n).reach_flag = 1;
     end
