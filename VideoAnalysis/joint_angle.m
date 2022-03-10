@@ -7,8 +7,8 @@ code_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\VideoAnalysis';
 
 Fs = 200;
 
-filename_cam1 = 'M_012121_CT_102121_v2_1_16-47-57_cam1DLC_resnet_50_JoystickOct23shuffle1_50000';
-filename_cam2 = 'M_012121_CT_102121_v2_1_16-47-57_cam2DLC_resnet_50_JoystickOct23shuffle1_50000';
+filename_cam1 = 'F_102320_CT_102221_3_14-13-56_cam1DLC_resnet_50_JoystickOct23shuffle1_50000';
+filename_cam2 = 'F_102320_CT_102221_3_14-13-56_cam2DLC_resnet_50_JoystickOct23shuffle1_50000';
 
 cd(data_folder)
 data_cam1 = readmatrix(filename_cam1);
@@ -53,7 +53,7 @@ figure(1)
 plot(time,elbow_angle_cam1,'LineWidth',1)
 hold on 
 plot(time,elbow_angle_cam2,'LineWidth',1)
-xline(1,'--','LineWidth',1,'color','k')
+xline(0.5,'--','LineWidth',1,'color','k')
 set(gca,'TickDir','out')
 set(gca,'box','off')
 
