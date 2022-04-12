@@ -18,11 +18,13 @@ clc
 data_folder = 'D:\JoystickExpts\data\';
 code_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode';
 mouse_ID = 'AN06';
-data_ID = '040522';
+data_ID = '032322';
 
 data_name = 'data';
 cd([data_folder mouse_ID '\EMG\' data_ID])
 load(data_name)
+load([data_name '_processed'])
+load('flag_noise')
 % load('baseline_mean')
 % load('baseline_sd')
 cd(code_folder)
@@ -30,11 +32,11 @@ cd(code_folder)
 Fs_EMG = 10000;
 
 lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
-    'PassbandFrequency',1000,'PassbandRipple',0.01, ...
+    'PassbandFrequency',700,'PassbandRipple',0.01, ...
     'SampleRate',Fs_EMG);
 
 hpFilt = designfilt('highpassiir','FilterOrder',8, ...
-    'PassbandFrequency',700,'PassbandRipple',0.01, ...
+    'PassbandFrequency',300,'PassbandRipple',0.01, ...
     'SampleRate',Fs_EMG);
 
 lpFilt2 = designfilt('lowpassiir','FilterOrder',8, ...
@@ -179,14 +181,14 @@ time = 1:cutoff;
 time = time./Fs_EMG;
 
 %EMG_bi_filt = EMG_bi_filt(1:length(EMG_tri))-EMG_tri_filt;
-% EMG_bi_rect = (EMG_bi_filt).^2;
-% EMG_tri_rect = (EMG_tri_filt).^2;
-% EMG_a_delt_rect = (EMG_a_delt_filt).^2;
-% EMG_p_delt_rect = (EMG_p_delt_filt).^2;
-EMG_bi_rect = abs(EMG_bi_filt);
-EMG_tri_rect = abs(EMG_tri_filt);
-EMG_a_delt_rect = abs(EMG_a_delt_filt);
-EMG_p_delt_rect = abs(EMG_p_delt_filt);
+EMG_bi_rect = (EMG_bi_filt).^2;
+EMG_tri_rect = (EMG_tri_filt).^2;
+EMG_a_delt_rect = (EMG_a_delt_filt).^2;
+EMG_p_delt_rect = (EMG_p_delt_filt).^2;
+% EMG_bi_rect = abs(EMG_bi_filt);
+% EMG_tri_rect = abs(EMG_tri_filt);
+% EMG_a_delt_rect = abs(EMG_a_delt_filt);
+% EMG_p_delt_rect = abs(EMG_p_delt_filt);
 
 EMG_bi_smooth = filtfilt(lpFilt2,EMG_bi_rect); %-baseline_mean(1))./baseline_sd(1);
 EMG_tri_smooth = filtfilt(lpFilt2,EMG_tri_rect); %-baseline_mean(2))./baseline_sd(2);
@@ -258,24 +260,6 @@ plot(f,pxx_p_delt,'k','LineWidth',1)
 xlabel('Frequency (Hz)')
 ylabel('Channel 4 (mV^2)')
 
-figure(4)
-ax1 = subplot(3,1,1);
-plot(time,EMG_bi_filt(1:cutoff),'LineWidth',1,'color','k')
-ylabel('Biceps')
-set(gca,'TickDir','out')
-set(gca,'box','off')
-ax2 = subplot(3,1,2:3);
-spectrogram(EMG_bi_filt,rectwin(1.5*Fs_EMG),0,0:0.5:5000,Fs_EMG,'yaxis','power')
-h = gca;
-h.XTickLabel = string(h.XTick * 60);
-xlabel('Time (s)');
-% Ax = gca;
-% xt = Ax.XTick;
-% Ax.XTickLabel = xt*60;
-%linkaxes([ax1 ax2],'x')
-
-figure(5)
-spectrogram(EMG_a_delt_filt,rectwin(1.5*Fs_EMG),0,0:0.5:5000,Fs_EMG,'yaxis','power')
 %%
 EMG_bi_all = [];
 EMG_tri_all = [];
@@ -286,7 +270,7 @@ str = input('Procede?','s');
 
 if strcmp(str,'y')
     
-    for i = 1:nTrial
+    for i = 18:nTrial
         
         
         if i > 1

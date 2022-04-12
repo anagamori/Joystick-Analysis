@@ -60,7 +60,7 @@ idx = find(reach_duration<100);
 target_hold_duration_all = [target_hold_duration_all target_hold_duration(idx)];
 hold_still_duration_all = [hold_still_duration_all hold_still_duration(idx)];
 reach_duration_all = [reach_duration_all reach_duration(idx)];
-path_lengt_allh = [path_length_all path_length(idx)];
+path_length_all = [path_length_all path_length(idx)];
 peak_velocity_all = [peak_velocity_all peak_velocity(idx)];
 
 

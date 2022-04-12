@@ -17,13 +17,13 @@ clc
 data_folder = 'D:\JoystickExpts\data\';
 code_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode';
 mouse_ID = 'AN04';
-data_ID = '031522';
+data_ID = '031822';
 
 data_name = 'data';
 cd([data_folder mouse_ID '\EMG\' data_ID])
 load(data_name)
-% load('baseline_mean')
-% load('baseline_sd')
+load([data_name '_processed'])
+load('flag_noise')
 cd(code_folder)
 
 Fs_EMG = 10000;
@@ -107,7 +107,6 @@ EMG_tri_smooth = filtfilt(lpFilt2,EMG_tri_rect); %-baseline_mean(2))./baseline_s
 % EMG_tri_smooth = (filtfilt(lpFilt2,EMG_tri_rect)-baseline_mean(2))./baseline_sd(2);
 
 index = 1;
-flag_noise = zeros(1,nTrial);
 
 cutoff = length(EMG_bi);
 time = 1:cutoff;
@@ -149,7 +148,7 @@ str = input('Procede?','s');
 
 if strcmp(str,'y')
     
-    for i = 1:nTrial
+    for i = 6:9
         
         
         if i > 1

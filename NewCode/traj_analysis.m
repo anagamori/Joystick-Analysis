@@ -10,8 +10,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_4_AN06';
-data_ID = '032222_63_79_020_10000_020_016_030_150_030_150_000';
+mouse_ID = 'Box_4_AN08';
+data_ID = '040522_63_100_010_10000_010_016_000_180_000_180_000';
 condition_array = strsplit(data_ID,'_');
 
 pltOpt = 1;
@@ -38,6 +38,7 @@ target_hold_duration = [];
 hold_still_duration = [];
 reach_duration = [];
 path_length = [];
+straightness = [];
 peak_velocity = [];
 
 flag = [];
@@ -63,7 +64,7 @@ for i = 1:nTrial
             hold_onset = 1;
         end
         hold_still_duration = [hold_still_duration hold_offset-hold_onset];
-        
+        hold_still_duration(i)
         %% target hold duration
         idx_off_target = find(radial_pos_2<=outer_threshold|radial_pos_2>=max_distance);
         temp = idx_off_target(idx_off_target<1*Fs_js);
@@ -71,15 +72,19 @@ for i = 1:nTrial
         temp2 = idx_off_target(idx_off_target>1*Fs_js);
         target_offset = temp2(1);
         target_hold_duration = [target_hold_duration target_offset-target_onset];
-        
+        target_hold_duration(i)
         %% Reach duration
         reach_duration = [reach_duration target_onset-hold_offset];
+        reach_duration(i)
         path_length = [path_length sum(d_euclidean(hold_offset:target_onset))];
-        
+        path_length(i)
+        D = sqrt((js_reach(i).traj_x_2(target_onset)-js_reach(i).traj_x_2(hold_offset)).^2+(js_reach(i).traj_y_2(target_onset)-js_reach(i).traj_y_2(hold_offset)).^2);
+        straightness = [straightness D/path_length(i)];
+        straightness(i)
         %% Peak velocity
         [temp_peak_velocity,loc_peak_velocity] = max(mag_vel_2(hold_offset-1:target_onset));
         peak_velocity = [peak_velocity temp_peak_velocity];
-        
+        peak_velocity(i)
         %% Find conincident velocity and RoC local minima
         
         [min_vel_2,loc_min_vel_2] = findpeaks(-mag_vel_2);
@@ -96,7 +101,11 @@ for i = 1:nTrial
         %% Reach start
         % the last coincident velocity and RoC local minima within hold
         idx_min_vel_hold = loc_min_vel_2(loc_min_vel_2<hold_offset&loc_min_vel_2>hold_onset);
-        start_time = idx_min_vel_hold(end);
+        if ~isempty(idx_min_vel_hold)
+            start_time = idx_min_vel_hold(end);
+        else
+            start_time = hold_onset;
+        end
         
         %% Reach end
         % the first coincident velocity and RoC local minima after reward
@@ -166,9 +175,9 @@ for i = 1:nTrial
             plot([0 7*cos(angle_2)],[0 7*sin(angle_2)],'color','m')
             axis equal
             
-            prompt = 'Any issue? y/n: ';
+            prompt = 'Acceptable? y/n: ';
             str = input(prompt,'s');
-            if strcmp(str,'y')
+            if strcmp(str,'n')
                 flag = [flag i];
             end
             close all
@@ -192,6 +201,7 @@ save('target_hold_duration','target_hold_duration')
 save('reach_duration','reach_duration')
 save('peak_velocity','peak_velocity')
 save('path_length','path_length')
+save('straightness','straightness')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
 
@@ -203,5 +213,10 @@ peak_velocity
 
 figure(1)
 plot(reach_duration,peak_velocity,'o','LineWidth',1)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+
+figure(2)
+plot(path_length,straightness,'o','LineWidth',1)
 set(gca,'TickDir','out')
 set(gca,'box','off')
