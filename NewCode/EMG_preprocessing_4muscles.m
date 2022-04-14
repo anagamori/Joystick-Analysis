@@ -18,7 +18,7 @@ clc
 data_folder = 'D:\JoystickExpts\data\';
 code_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode';
 mouse_ID = 'AN06';
-data_ID = '040522';
+data_ID = '032422';
 
 data_name = 'data';
 cd([data_folder mouse_ID '\EMG\' data_ID])

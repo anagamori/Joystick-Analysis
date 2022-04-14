@@ -54,7 +54,6 @@ for i = 1:nTrial
     idx_on_hold = find(radial_pos_2<hold_threshold);
     temp = idx_on_hold(idx_on_hold<1*Fs_js);
     if ~isempty(temp)
-        i
         hold_offset = temp(end)+1;
         
         idx_off_hold = find(radial_pos_2>=hold_threshold);
@@ -195,8 +194,7 @@ for i = 1:nTrial
             plot(max_distance*cos(theta),max_distance*sin(theta),'--','color','k')
             plot([0 7*cos(angle_1)],[0 7*sin(angle_1)],'color','m')
             plot([0 7*cos(angle_2)],[0 7*sin(angle_2)],'color','m')
-            xlabel('ML (mm)')
-            ylabel('AP (mm)')
+            xlabel('')
             axis equal
             
             prompt = 'Acceptable? y/n: ';

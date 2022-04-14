@@ -4,7 +4,7 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_4_AN06'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '032422_63_79_020_10000_020_016_030_150_030_150_000';
+data_ID = '040122_63_79_020_10000_020_016_030_150_030_150_000';
 % mouse_ID = 'Box_4_F_081921_CT_EMG'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
 % data_ID = '110721_60_80_050_0300_010_010_000_360_000_360_004';
 condition_array = strsplit(data_ID,'_');
@@ -36,19 +36,23 @@ load('data_processed')
 load('flag_noise')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
+
+cd([data_folder mouse_ID '\' data_ID])
+load('data')
+cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
+
 Fs_js = 1000;
 Fs_EMG = 10000;
-
-trial_start_time_js =  1*Fs_js-0.25*Fs_js+1;
-trial_start_time_EMG =  1*Fs_EMG-0.25*Fs_EMG+1;
-
-nTrial = length(js_reach);
+Fs_joint = 200;
 
 radial_pos_all = [];
 js_vel_all = [];
 js_acc_all = [];
 mag_vel_all = [];
 max_vel_all = [];
+
+elbow_angle_all = [];
+wrist_angle_all = [];
 
 EMG_biceps_all = [];
 EMG_triceps_all = [];
@@ -79,12 +83,17 @@ r_tri_js_acc_all = [];
 r_a_delt_js_acc_all = [];
 r_p_delt_js_acc_all = [];
 
-index_js_reach = 1:length(js_reach);
-index_EMG = length(EMG_struct)-5:length(EMG_struct);
+r_bi_angle_all = [];
+r_tri_angle_all = [];
+r_a_delt_angle_all = [];
+r_p_delt_angle_all = [];
+
+index_js_reach = 1:length(js_reach)-2;
+index_EMG = 1:length(EMG_struct);
 
 for i = 1:length(index_js_reach) %nTrial
-    j = index_js_reach(i);
-    k = index_EMG(i);
+    j = index_js_reach(i)
+    k = index_EMG(i)
     %if isempty(js_reach(i).reach_flag)
     if ~isempty(js_reach(i).start_time)
         start_idx_js = js_reach(i).start_time;
@@ -93,23 +102,30 @@ for i = 1:length(index_js_reach) %nTrial
         start_idx_EMG = start_idx_js*Fs_EMG/Fs_js;
         end_idx_EMG = end_idx_js*Fs_EMG/Fs_js;
         
-        start_offset = -0.08;
-        end_offset = 0.08;
-        time_js = start_offset:1/Fs_js:end_offset;
+        start_idx_joint = round(start_idx_js*Fs_joint/Fs_js);
+        end_idx_joint = round(end_idx_js*Fs_joint/Fs_js);
+        
+        start_offset = -0.05;
+        end_offset = 0.05;
+        time_js = start_offset:1/Fs_js:end_offset-1/Fs_js;
         time_js = time_js*1000;
-        time_EMG = start_offset:1/Fs_EMG:end_offset;
+        time_EMG = start_offset:1/Fs_EMG:end_offset-1/Fs_EMG;
         time_EMG = time_EMG*1000;
+        time_joint = start_offset:1/Fs_joint:end_offset-1/Fs_joint;
+        time_joint = time_joint*1000;
         
         window_size = length(time_js);
         
         if flag_noise(k) == 1 && straightness(j) >0.9
             
-            
+            % Find peak velocity between reach start and reward delivery (at 1 sec mark)
             mag_vel = js_reach(j).mag_vel_2(start_idx_js:1*Fs_js);
             [~,loc_max_mag_vel] = max(mag_vel);
             
-            analysis_window_js = [loc_max_mag_vel+start_idx_js+start_offset*Fs_js:loc_max_mag_vel+start_idx_js+end_offset*Fs_js];
-            analysis_window_EMG = [loc_max_mag_vel*Fs_EMG/Fs_js+start_idx_EMG+start_offset*Fs_EMG:loc_max_mag_vel*Fs_EMG/Fs_js+start_idx_EMG+end_offset*Fs_EMG];
+            analysis_window_js = [loc_max_mag_vel+start_idx_js+start_offset*Fs_js:loc_max_mag_vel+start_idx_js+end_offset*Fs_js-1];
+            analysis_window_EMG = [loc_max_mag_vel*Fs_EMG/Fs_js+start_idx_EMG+start_offset*Fs_EMG:loc_max_mag_vel*Fs_EMG/Fs_js+start_idx_EMG+end_offset*Fs_EMG-1];
+            analysis_window_joint = [round(loc_max_mag_vel*Fs_joint/Fs_js)+start_idx_joint+round(start_offset*Fs_joint)...
+                :round(loc_max_mag_vel*Fs_joint/Fs_js)+start_idx_joint+end_offset*Fs_joint-1];
             
             radial_pos_all = [radial_pos_all; js_reach(j).radial_pos_2(analysis_window_js)];
             radial_pos = js_reach(j).radial_pos_2(analysis_window_js);
@@ -119,15 +135,24 @@ for i = 1:length(index_js_reach) %nTrial
             js_acc = gradient(js_vel)*Fs_js;
             js_acc_all = [js_acc_all; js_acc];
             
+            elbow_angle = data(k).elbow_angle(analysis_window_joint)';
+            elbow_angle_all = [elbow_angle_all; data(k).elbow_angle(analysis_window_joint)'];
+            wrist_angle_all = [wrist_angle_all; data(k).wrist_angle(analysis_window_joint)'];
+            
             mag_vel_all = [mag_vel_all; js_reach(j).mag_vel_2(analysis_window_js)];
+            
             EMG_biceps = EMG_struct(k).biceps_zscore(analysis_window_EMG);
             EMG_biceps_ds = downsample(EMG_biceps,10);
+            EMG_biceps_ds_2 = downsample(EMG_biceps,Fs_EMG/Fs_joint);
             EMG_triceps = EMG_struct(k).triceps_zscore(analysis_window_EMG);
             EMG_triceps_ds = downsample(EMG_triceps,10);
+            EMG_triceps_ds_2 = downsample(EMG_triceps,Fs_EMG/Fs_joint);
             EMG_a_delt = EMG_struct(k).a_delt_zscore(analysis_window_EMG);
             EMG_a_delt_ds = downsample(EMG_a_delt,10);
+            EMG_a_delt_ds_2 = downsample(EMG_a_delt,Fs_EMG/Fs_joint);
             EMG_p_delt = EMG_struct(k).p_delt_zscore(analysis_window_EMG);
             EMG_p_delt_ds = downsample(EMG_p_delt,10);
+            EMG_p_delt_ds_2 = downsample(EMG_p_delt,Fs_EMG/Fs_joint);
             
             [r_bi_tri,lags] = xcorr(EMG_biceps-mean(EMG_biceps),EMG_triceps-mean(EMG_triceps),window_size*Fs_EMG/Fs_js,'coeff');
             r_bi_tri_all = [r_bi_tri_all r_bi_tri];
@@ -169,6 +194,15 @@ for i = 1:length(index_js_reach) %nTrial
             r_a_delt_js_acc_all = [r_a_delt_js_acc_all r_a_delt_js_acc];
             r_p_delt_js_acc_all = [r_p_delt_js_acc_all r_p_delt_js_acc];
             
+            [r_bi_angle,lags_angle] = xcorr(EMG_biceps_ds_2-mean(EMG_biceps_ds_2),elbow_angle-mean(elbow_angle),round(window_size*Fs_joint/Fs_js),'coeff');
+            [r_tri_angle,~] = xcorr(EMG_triceps_ds_2-mean(EMG_triceps_ds_2),elbow_angle-mean(elbow_angle),round(window_size*Fs_joint/Fs_js),'coeff');
+            [r_a_delt_angle,~] = xcorr(EMG_a_delt_ds_2-mean(EMG_a_delt_ds_2),elbow_angle-mean(elbow_angle),round(window_size*Fs_joint/Fs_js),'coeff');
+            [r_p_delt_angle,~] = xcorr(EMG_p_delt_ds_2-mean(EMG_p_delt_ds_2),elbow_angle-mean(elbow_angle),round(window_size*Fs_joint/Fs_js),'coeff');
+            r_bi_angle_all = [r_bi_angle_all r_bi_angle];
+            r_tri_angle_all = [r_tri_angle_all r_tri_angle];
+            r_a_delt_angle_all = [r_a_delt_angle_all r_a_delt_angle];
+            r_p_delt_angle_all = [r_p_delt_angle_all r_p_delt_angle];
+            
             EMG_biceps_all = [EMG_biceps_all; EMG_biceps'];
             EMG_triceps_all = [EMG_triceps_all; EMG_triceps'];
             EMG_a_delt_all = [EMG_a_delt_all; EMG_a_delt'];
@@ -181,37 +215,43 @@ for i = 1:length(index_js_reach) %nTrial
             
             f1 = figure(1);
             movegui(f1,'northwest')
-            ax1 = subplot(5,1,1);
+            ax1 = subplot(6,1,1);
             plot1 = plot(time_js,js_reach(j).radial_pos_2(analysis_window_js),'LineWidth',1,'color','k');
             plot1.Color(4) = 1;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
-            ax2 = subplot(5,1,2);
-            plot2 = plot(time_EMG,EMG_biceps,'LineWidth',1,'color',[35 140 204]/255);
+            ax2 = subplot(6,1,2);
+            plot2 = plot(time_joint,data(k).elbow_angle(analysis_window_joint),'LineWidth',1,'color','k');
             plot2.Color(4) = 1;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
-            ax3 = subplot(5,1,3);
-            plot3 = plot(time_EMG,EMG_triceps,'LineWidth',1,'color',[204 45 52]/255);
+            ax3 = subplot(6,1,3);
+            plot3 = plot(time_EMG,EMG_biceps,'LineWidth',1,'color',[35 140 204]/255);
             plot3.Color(4) = 1;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
-            ax4 = subplot(5,1,4);
-            plot4 = plot(time_EMG,EMG_a_delt,'LineWidth',1,'color',[45 49 66]/255);
+            ax4 = subplot(6,1,4);
+            plot4 = plot(time_EMG,EMG_triceps,'LineWidth',1,'color',[204 45 52]/255);
             plot4.Color(4) = 1;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
-            ax5 = subplot(5,1,5);
-            plot4 = plot(time_EMG,EMG_p_delt,'LineWidth',1,'color',[247 146 83]/255);
-            plot4.Color(4) = 1;
+            ax5 = subplot(6,1,5);
+            plot5 = plot(time_EMG,EMG_a_delt,'LineWidth',1,'color',[45 49 66]/255);
+            plot5.Color(4) = 1;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
-            linkaxes([ax1 ax2 ax3 ax4 ax5],'x')
+            ax6 = subplot(6,1,6);
+            plot6 = plot(time_EMG,EMG_p_delt,'LineWidth',1,'color',[247 146 83]/255);
+            plot6.Color(4) = 1;
+            hold on
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            linkaxes([ax1 ax2 ax3 ax4 ax5 ax6],'x')
             
             %         figure(3)
             %         ax1 = subplot(3,1,1);
@@ -400,11 +440,9 @@ ylabel('Biceps EMG (V)')
 subplot(5,1,3)
 plot(time_EMG,mean(EMG_triceps_all),'LineWidth',2,'color','k')
 ylabel('Triceps EMG (V)')
-xlabel('Time (sec)')
 subplot(5,1,4)
 plot(time_EMG,mean(EMG_a_delt_all),'LineWidth',2,'color','k')
 ylabel('AD EMG (V)')
-xlabel('Time (sec)')
 subplot(5,1,5)
 plot(time_EMG,mean(EMG_p_delt_all),'LineWidth',2,'color','k')
 ylabel('PD EMG (V)')

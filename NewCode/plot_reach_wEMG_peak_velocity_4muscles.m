@@ -103,8 +103,7 @@ for i = 1:length(index_js_reach) %nTrial
     window_size = length(time_js);
 
     if flag_noise(k) == 1 && straightness(j) >0.8
-        
-        
+               
         mag_vel = js_reach(j).mag_vel_2(start_idx_js:1*Fs_js);
         [~,loc_max_mag_vel] = max(mag_vel);
         

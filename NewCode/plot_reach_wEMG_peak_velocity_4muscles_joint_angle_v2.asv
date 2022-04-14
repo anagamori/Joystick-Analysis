@@ -36,13 +36,14 @@ load('data_processed')
 load('flag_noise')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
+
+cd([data_folder mouse_ID '\' data_ID])
+load('data')
+cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
+
 Fs_js = 1000;
 Fs_EMG = 10000;
-
-trial_start_time_js =  1*Fs_js-0.25*Fs_js+1;
-trial_start_time_EMG =  1*Fs_EMG-0.25*Fs_EMG+1;
-
-nTrial = length(js_reach);
+Fs_joint = 200;
 
 radial_pos_all = [];
 js_vel_all = [];
@@ -79,6 +80,11 @@ r_tri_js_acc_all = [];
 r_a_delt_js_acc_all = [];
 r_p_delt_js_acc_all = [];
 
+r_bi_angle_all = [];
+r_tri_angle_all = [];
+r_a_delt_angle_all = [];
+r_p_delt_angle_all = [];
+
 index_js_reach = 1:length(js_reach);
 index_EMG = length(EMG_struct)-5:length(EMG_struct);
 
@@ -93,18 +99,23 @@ for i = 1:length(index_js_reach) %nTrial
         start_idx_EMG = start_idx_js*Fs_EMG/Fs_js;
         end_idx_EMG = end_idx_js*Fs_EMG/Fs_js;
         
-        start_offset = -0.08;
-        end_offset = 0.08;
+        start_idx_joint = round(start_idx_js*Fs_joint/Fs_js);
+        end_idx_joint = round(end_idx_js*Fs_joint/Fs_js);
+        
+        start_offset = -0.05;
+        end_offset = 0.05;
         time_js = start_offset:1/Fs_js:end_offset;
         time_js = time_js*1000;
         time_EMG = start_offset:1/Fs_EMG:end_offset;
         time_EMG = time_EMG*1000;
+        time_joint = start_offset:1/Fs_joint:end_offset;
+        time_joint = time_joint*1000;
         
         window_size = length(time_js);
         
         if flag_noise(k) == 1 && straightness(j) >0.9
             
-            
+            % Find peak velocity between sta
             mag_vel = js_reach(j).mag_vel_2(start_idx_js:1*Fs_js);
             [~,loc_max_mag_vel] = max(mag_vel);
             

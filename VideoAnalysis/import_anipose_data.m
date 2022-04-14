@@ -2,7 +2,7 @@ close all
 clear all
 clc
 
-data_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\VideoAnalysis\Data\';
+data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'AN06'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
 data_ID = '040122';
 
@@ -48,4 +48,6 @@ for i = 1:length(files_pose_3d)
     
 end
 
+cd([data_folder  mouse_ID '\' data_ID])
+save('data','data')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\VideoAnalysis')
