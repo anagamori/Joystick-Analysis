@@ -86,9 +86,9 @@ for i = 1:length(index_js_reach) %nTrial
     j = index_js_reach(i);
     k = index_EMG(i);
     %if isempty(js_reach(i).reach_flag)
-    if ~isempty(js_reach(i).start_time)
-    start_idx_js = js_reach(i).start_time;
-    end_idx_js = js_reach(i).end_time;
+    if ~isempty(js_reach(j).start_time)
+    start_idx_js = js_reach(j).start_time;
+    end_idx_js = js_reach(j).end_time;
     
     start_idx_EMG = start_idx_js*Fs_EMG/Fs_js;
     end_idx_EMG = end_idx_js*Fs_EMG/Fs_js;
