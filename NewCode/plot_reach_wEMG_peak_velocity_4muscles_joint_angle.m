@@ -4,7 +4,7 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_4_AN06'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '032422_63_79_020_10000_020_016_030_150_030_150_000';
+data_ID = '040122_63_79_020_10000_020_016_030_150_030_150_000';
 % mouse_ID = 'Box_4_F_081921_CT_EMG'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
 % data_ID = '110721_60_80_050_0300_010_010_000_360_000_360_004';
 condition_array = strsplit(data_ID,'_');
@@ -14,6 +14,10 @@ outer_threshold = str2double(condition_array{2})/100*6.35;
 max_distance = str2double(condition_array{3})/100*6.35;
 hold_duration = str2double(condition_array{6});
 trial_duration = str2double(condition_array{5});
+angle_1 = str2double(condition_array{8})/180*pi;
+angle_2 = str2double(condition_array{9})/180*pi;
+
+theta = 0:0.01:2*pi;
 
 cd([data_folder mouse_ID '\' data_ID])
 load('js_reach')
@@ -44,6 +48,10 @@ Fs_js = 1000;
 Fs_EMG = 10000;
 Fs_joint = 200;
 
+
+lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
+    'PassbandFrequency',200,'PassbandRipple',0.01, ...
+    'SampleRate',Fs_EMG);
 
 radial_pos_all = [];
 js_vel_all = [];
@@ -88,17 +96,23 @@ r_tri_angle_all = [];
 r_a_delt_angle_all = [];
 r_p_delt_angle_all = [];
 
-index_js_reach = 1:length(js_reach);
-index_EMG = length(EMG_struct)-5:length(EMG_struct);
+index_js_reach = 1:length(js_reach)-2;
+index_EMG = 1:length(EMG_struct);
 
-for i = 1:length(index_js_reach) %nTrial
+for i = 29; %1:length(index_js_reach) %nTrial
     j = index_js_reach(i);
     k = index_EMG(i);
     %if isempty(js_reach(i).reach_flag)
     if ~isempty(js_reach(j).start_time)
         start_idx_js = js_reach(j).start_time;
         end_idx_js = js_reach(j).end_time;
-        
+        target_onset = js_reach(j).target_onset;
+        target_offset = js_reach(j).target_offset;
+        hold_onset = js_reach(j).hold_onset;
+        hold_offset = js_reach(j).hold_offset;
+        start_time = js_reach(j).start_time;
+        end_time = js_reach(j).end_time/Fs_js;
+    
         start_idx_EMG = start_idx_js*Fs_EMG/Fs_js;
         end_idx_EMG = end_idx_js*Fs_EMG/Fs_js;
         
@@ -116,7 +130,7 @@ for i = 1:length(index_js_reach) %nTrial
         time_joint = time_joint*1000;
         window_size = length(time_js);
         
-        if flag_noise(k) == 1 && straightness(j) >0.8 && length(data(k).elbow_angle)>250
+        if flag_noise(k) == 1 && length(data(k).elbow_angle)>250 && straightness(j) > 0.9 
                        
             mag_vel = js_reach(j).mag_vel_2(start_idx_js:1*Fs_js);
             [~,loc_max_mag_vel] = max(mag_vel);
@@ -135,6 +149,9 @@ for i = 1:length(index_js_reach) %nTrial
             js_acc = gradient(js_vel)*Fs_js;
             js_acc_all = [js_acc_all; js_acc];
             
+            traj_x = js_reach(j).traj_x_2(analysis_window_js);
+            traj_y = js_reach(j).traj_y_2(analysis_window_js);
+            
             elbow_angle = data(k).elbow_angle(analysis_window_joint)';
             elbow_angle_all = [elbow_angle_all; data(k).elbow_angle(analysis_window_joint)'];
             wrist_angle_all = [wrist_angle_all; data(k).wrist_angle(analysis_window_joint)'];
@@ -147,7 +164,13 @@ for i = 1:length(index_js_reach) %nTrial
             EMG_triceps = EMG_struct(k).triceps_zscore(analysis_window_EMG);
             EMG_triceps_ds = downsample(EMG_triceps,10);
             EMG_triceps_ds_2 = downsample(EMG_triceps,Fs_EMG/Fs_joint);
-            EMG_a_delt = EMG_struct(k).a_delt_zscore(analysis_window_EMG);
+            
+            EMG_a_delt_temp= abs(EMG_struct(k).a_delt_raw);
+            EMG_a_delt = conv(EMG_a_delt_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
+            EMG_a_delt = EMG_a_delt(analysis_window_EMG);
+            %EMG_a_delt_temp = filtfilt(lpFilt,abs(EMG_struct(k).a_delt_raw));
+            %EMG_a_delt = EMG_a_delt_temp(analysis_window_EMG);
+            %EMG_a_delt = EMG_struct(k).a_delt_zscore(analysis_window_EMG);
             EMG_a_delt_ds = downsample(EMG_a_delt,10);
             EMG_a_delt_ds_2 = downsample(EMG_a_delt,Fs_EMG/Fs_joint);
             EMG_p_delt = EMG_struct(k).p_delt_zscore(analysis_window_EMG);
@@ -213,7 +236,8 @@ for i = 1:length(index_js_reach) %nTrial
             EMG_a_delt_raw_all = [EMG_a_delt_raw_all; EMG_struct(k).a_delt_raw(analysis_window_EMG)'];
             EMG_p_delt_raw_all = [EMG_p_delt_raw_all; EMG_struct(k).p_delt_raw(analysis_window_EMG)'];
             
-            figure(1)
+            f1 = figure(1);
+            movegui(f1,'northwest')
             ax1 = subplot(6,1,1);
             plot1 = plot(time_js,js_reach(j).radial_pos_2(analysis_window_js),'LineWidth',1,'color','k');
             plot1.Color(4) = 0.5;
@@ -252,50 +276,76 @@ for i = 1:length(index_js_reach) %nTrial
             set(gca,'box','off')
             linkaxes([ax1 ax2 ax3 ax4 ax5 ax6],'x')
             
-            %         figure(3)
-            %         ax1 = subplot(3,1,1);
-            %         plot1 = plot(time_js,js_reach(j).radial_pos_2(analysis_window_js),'LineWidth',1,'color','k');
-            %         plot1.Color(4) = 0.1;
-            %         hold on
-            %         set(gca,'TickDir','out')
-            %         set(gca,'box','off')
-            %         ax2 = subplot(3,1,2);
-            %         plot2 = plot(time_EMG,EMG_struct(k).biceps_raw(analysis_window_EMG),'LineWidth',1,'color',[35 140 204]/255);
-            %         plot2.Color(4) = 0.1;
-            %         hold on
-            %         set(gca,'TickDir','out')
-            %         set(gca,'box','off')
-            %         ax3 = subplot(3,1,3);
-            %         plot3 = plot(time_EMG,EMG_struct(k).triceps_raw(analysis_window_EMG),'LineWidth',1,'color','r');
-            %         plot3.Color(4) = 0.1;
-            %         hold on
-            %         set(gca,'TickDir','out')
-            %         set(gca,'box','off')
-            %         linkaxes([ax1 ax2 ax3],'x')
+            f2 = figure(2);
+            movegui(f2,'southwest')
+            ax1 = subplot(4,1,1);
+            plot1 = plot(time_js,js_reach(j).radial_pos_2(analysis_window_js),'LineWidth',1,'color','k');
+            plot1.Color(4) = 1;
+            hold on
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            ax2 = subplot(4,1,2);
+            plot1 = plot(time_js,js_vel,'LineWidth',1,'color','k');
+            plot1.Color(4) = 1;
+            hold on
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            ax3 = subplot(4,1,3);
+            plot3 = plot(time_js,js_acc,'LineWidth',1,'color','k');
+            plot3.Color(4) = 1;
+            hold on
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            ax4 = subplot(4,1,4);
+            plot4 = plot(time_EMG,EMG_a_delt,'LineWidth',1,'color',[204 45 52]/255);
+            plot4.Color(4) = 1;
+            hold on
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            linkaxes([ax1 ax2 ax3 ax4],'x')
+            
+            f3 = figure(3);
+            movegui(f3,'south')
+            plot(traj_x,traj_y,'color',[45, 49, 66]/255,'LineWidth',1)
+            hold on
+            plot(js_reach(j).traj_x_2(start_time:target_onset),js_reach(j).traj_y_2(start_time:target_onset),'color',[255,147,79]/255,'LineWidth',2)
+            xlim([-7 7])
+            ylim([-7 7])
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            hold on
+            plot(hold_threshold*cos(theta),hold_threshold*sin(theta),'--','color','k')
+            plot(outer_threshold*cos(theta),outer_threshold*sin(theta),'--','color','k')
+            plot(max_distance*cos(theta),max_distance*sin(theta),'--','color','k')
+            plot([0 7*cos(angle_1)],[0 7*sin(angle_1)],'color','m')
+            plot([0 7*cos(angle_2)],[0 7*sin(angle_2)],'color','m')
+            xlabel('ML (mm)')
+            ylabel('AP (mm)')
+            axis equal
             
             
             figure(5)
             subplot(2,2,1)
             plot1 = plot(lags_js/Fs_js*1000,r_bi_js_pos,'LineWidth',1,'color',[35 140 204]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
             subplot(2,2,2)
             plot1 = plot(lags_js/Fs_js*1000,r_tri_js_pos,'LineWidth',1,'color',[204 45 52]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
             subplot(2,2,3)
             plot1 = plot(lags_js/Fs_js*1000,r_a_delt_js_pos,'LineWidth',1,'color',[45 49 66]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
             subplot(2,2,4)
             plot1 = plot(lags_js/Fs_js*1000,r_p_delt_js_pos,'LineWidth',1,'color',[247 146 83]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
@@ -303,25 +353,25 @@ for i = 1:length(index_js_reach) %nTrial
             figure(6)
             subplot(2,2,1)
             plot1 = plot(lags_js/Fs_js*1000,r_bi_js_vel,'LineWidth',1,'color',[35 140 204]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
             subplot(2,2,2)
             plot1 = plot(lags_js/Fs_js*1000,r_tri_js_vel,'LineWidth',1,'color',[204 45 52]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
             subplot(2,2,3)
             plot1 = plot(lags_js/Fs_js*1000,r_a_delt_js_vel,'LineWidth',1,'color',[45 49 66]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
             subplot(2,2,4)
             plot1 = plot(lags_js/Fs_js*1000,r_p_delt_js_vel,'LineWidth',1,'color',[247 146 83]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
@@ -329,25 +379,25 @@ for i = 1:length(index_js_reach) %nTrial
             figure(7)
             subplot(2,2,1)
             plot1 = plot(lags_js/Fs_js*1000,r_bi_js_acc,'LineWidth',1,'color',[35 140 204]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
             subplot(2,2,2)
             plot1 = plot(lags_js/Fs_js*1000,r_tri_js_acc,'LineWidth',1,'color',[204 45 52]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
             subplot(2,2,3)
             plot1 = plot(lags_js/Fs_js*1000,r_a_delt_js_acc,'LineWidth',1,'color',[45 49 66]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
             subplot(2,2,4)
             plot1 = plot(lags_js/Fs_js*1000,r_p_delt_js_acc,'LineWidth',1,'color',[247 146 83]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
@@ -355,74 +405,77 @@ for i = 1:length(index_js_reach) %nTrial
             figure(8)
             subplot(2,3,1)
             plot1 = plot(lags/Fs_EMG*1000,r_bi_tri,'LineWidth',1,'color','k');
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             hold on
             title('Biceps-Triceps')
             set(gca,'TickDir','out')
             set(gca,'box','off')
             subplot(2,3,2)
             plot1 = plot(lags/Fs_EMG*1000,r_bi_a_delt,'LineWidth',1,'color','k');
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             hold on
-            title('Biceps-AD')
+            title('Biceps-CB')
             set(gca,'TickDir','out')
             set(gca,'box','off')
             subplot(2,3,3)
             plot1 = plot(lags/Fs_EMG*1000,r_bi_p_delt,'LineWidth',1,'color','k');
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             hold on
-            title('Biceps-PD')
+            title('Biceps-AD')
             set(gca,'TickDir','out')
             set(gca,'box','off')
             subplot(2,3,4)
             plot1 = plot(lags/Fs_EMG*1000,r_tri_a_delt,'LineWidth',1,'color','k');
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             hold on
-            title('Triceps-AD')
+            title('Triceps-CB')
             set(gca,'TickDir','out')
             set(gca,'box','off')
             subplot(2,3,5)
             plot1 = plot(lags/Fs_EMG*1000,r_tri_p_delt,'LineWidth',1,'color','k');
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             hold on
-            title('Triceps-PD')
+            title('Triceps-AD')
             set(gca,'TickDir','out')
             set(gca,'box','off')
             subplot(2,3,6)
             plot1 = plot(lags/Fs_EMG*1000,r_a_delt_p_delt,'LineWidth',1,'color','k');
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             hold on
-            title('AD-PD')
+            title('CB-AD')
             set(gca,'TickDir','out')
             set(gca,'box','off')
             
             figure(9)
             subplot(2,2,1)
             plot1 = plot(lags_angle/Fs_joint*1000,r_bi_angle,'LineWidth',1,'color',[35 140 204]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
             subplot(2,2,2)
             plot1 = plot(lags_angle/Fs_joint*1000,r_tri_angle,'LineWidth',1,'color',[204 45 52]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
             subplot(2,2,3)
             plot1 = plot(lags_angle/Fs_joint*1000,r_a_delt_angle,'LineWidth',1,'color',[45 49 66]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
             subplot(2,2,4)
             plot1 = plot(lags_angle/Fs_joint*1000,r_p_delt_angle,'LineWidth',1,'color',[247 146 83]/255);
-            plot1.Color(4) = 0.3;
+            plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
             
+            %prompt = 'Move to nex? y/n: ';
+            %str = input(prompt,'s');
         end
+        
     end
 end
 
@@ -444,26 +497,25 @@ figure(1)
 subplot(6,1,1)
 plot(time_js,mean(radial_pos_all),'LineWidth',2,'color','k')
 yline(hold_threshold,'--','color','k','LineWidth',2)
-yline(outer_threshold,'color','g','LineWidth',2)
-yline(max_distance,'color','g','LineWidth',2)
-ylabel('Radial Postion (mm)')
+yline(outer_threshold,'--','color','k','LineWidth',2)
+yline(max_distance,'--','color','k','LineWidth',2)
+ylabel({'Radial','Postion (mm)'})
 subplot(6,1,2)
 plot(time_joint,mean(elbow_angle_all),'LineWidth',2,'color','k')
+ylabel({'Elbow','Angle (deg)'})
 subplot(6,1,3)
 plot(time_EMG,mean(EMG_biceps_all),'LineWidth',2,'color','k')
-ylabel('Biceps EMG (V)')
+ylabel({'Biceps','(z-score)'})
 subplot(6,1,4)
 plot(time_EMG,mean(EMG_triceps_all),'LineWidth',2,'color','k')
-ylabel('Triceps EMG (V)')
-xlabel('Time (sec)')
+ylabel({'Triceps','(z-score)'})
 subplot(6,1,5)
 plot(time_EMG,mean(EMG_a_delt_all),'LineWidth',2,'color','k')
-ylabel('AD EMG (V)')
-xlabel('Time (sec)')
+ylabel({'CB','(z-score)'})
 subplot(6,1,6)
 plot(time_EMG,mean(EMG_p_delt_all),'LineWidth',2,'color','k')
-ylabel('PD EMG (V)')
-xlabel('Time (sec)')
+ylabel({'AD','(z-score)'})
+xlabel('Time (ms)')
 
 % figure(2)
 % ax1 = subplot(7,1,1);
@@ -521,14 +573,14 @@ figure(4)
 ax1 = subplot(6,1,1);
 plot(time_js,mean(radial_pos_all),'LineWidth',2,'color','k')
 yline(hold_threshold,'--','color','k','LineWidth',2)
-yline(outer_threshold,'color','g','LineWidth',2)
-yline(max_distance,'color','g','LineWidth',2)
+yline(outer_threshold,'--','color','k','LineWidth',2)
+yline(max_distance,'--','color','k','LineWidth',2)
 ylabel({'Position';'(mm/s)'})
 set(gca,'TickDir','out')
 set(gca,'box','off')
 ax2 = subplot(6,1,2);
 plot(time_joint,mean(elbow_angle_all),'LineWidth',2,'color','k')
-ylabel({'Velocity';'(mm/s)'})
+ylabel({'Elbow','Angle (deg)'})
 set(gca,'TickDir','out')
 set(gca,'box','off')
 ax4 = subplot(6,1,3);
@@ -580,7 +632,7 @@ linkaxes([ax1 ax2 ax4 ax5 ax6 ax7],'x')
 
 figure(5)
 subplot(2,2,1)
-title('Position')
+%title('Position')
 plot(lags_js/Fs_js*1000,mean(r_bi_js_pos_all,2),'LineWidth',2,'color',[35 140 204]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')
@@ -599,7 +651,7 @@ set(gca,'box','off')
 
 figure(6)
 subplot(2,2,1)
-title('Velocity')
+%title('Velocity')
 plot(lags_js/Fs_js*1000,mean(r_bi_js_vel_all,2),'LineWidth',2,'color',[35 140 204]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')
@@ -619,7 +671,7 @@ set(gca,'box','off')
 
 figure(7)
 subplot(2,2,1)
-title('Acceleration')
+%title('Acceleration')
 plot(lags_js/Fs_js*1000,mean(r_bi_js_acc_all,2),'LineWidth',2,'color',[35 140 204]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')
@@ -648,12 +700,12 @@ set(gca,'TickDir','out')
 set(gca,'box','off')
 subplot(2,3,3)
 plot(lags/Fs_EMG*1000,mean(r_bi_p_delt_all,2),'LineWidth',2,'color','k');
-title('Biceps-PD')
+title('Biceps-AD')
 set(gca,'TickDir','out')
 set(gca,'box','off')
 subplot(2,3,4)
 plot(lags/Fs_EMG*1000,mean(r_tri_a_delt_all,2),'LineWidth',2,'color','k');
-title('Triceps-AD')
+title('Triceps-CB')
 set(gca,'TickDir','out')
 set(gca,'box','off')
 subplot(2,3,5)
@@ -662,13 +714,13 @@ set(gca,'TickDir','out')
 set(gca,'box','off')
 subplot(2,3,6)
 plot(lags/Fs_EMG*1000,mean(r_a_delt_p_delt_all,2),'LineWidth',2,'color','k');
-title('AD-PD')
+title('CB-AD')
 set(gca,'TickDir','out')
 set(gca,'box','off')
 
 figure(9)
 subplot(2,2,1)
-title('Position')
+%title('Position')
 plot(lags_angle/Fs_joint*1000,mean(r_bi_angle_all,2),'LineWidth',2,'color',[35 140 204]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')

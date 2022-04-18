@@ -12,7 +12,7 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_4_AN08'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '040722_47_79_010_10000_100_016_030_150_030_150_000';
+data_ID = '041422_63_79_020_10000_200_016_030_150_030_150_000';
 condition_array = strsplit(data_ID,'_');
 hold_threshold = str2double(condition_array{7})/100*6.35;
 outer_threshold = str2double(condition_array{2})/100*6.35;

@@ -3,19 +3,19 @@ clear all
 clc
 
 Fs = 10000;
-load('noise_test_2_GouldingLab')
+load('noise_test_041522_v2')
 
-movRMS = dsp.MovingRMS;
+%movRMS = dsp.MovingRMS;
 
 signal_ch1 = Ch1.values;
 signal_ch2 = Ch2.values;
 signal_ch3 = Ch3.values;
 signal_ch4 = Ch4.values;
-
-rms_ch1 = movRMS(signal_ch1);
-rms_ch2 = movRMS(signal_ch2);
-rms_ch3 = movRMS(signal_ch3);
-rms_ch4 = movRMS(signal_ch4);
+% 
+% rms_ch1 = movRMS(signal_ch1);
+% rms_ch2 = movRMS(signal_ch2);
+% rms_ch3 = movRMS(signal_ch3);
+% rms_ch4 = movRMS(signal_ch4);
 
 [pxx_ch1,f] = pwelch(signal_ch1-mean(signal_ch1),rectwin(5*Fs),0,0:0.5:5000,Fs);
 [pxx_ch2,~] = pwelch(signal_ch2-mean(signal_ch2),rectwin(5*Fs),0,0:0.5:5000,Fs);
@@ -59,24 +59,24 @@ plot(f,pxx_ch4,'k','LineWidth',1)
 xlabel('Time (sec)')
 ylabel('Channel 4 (mV)')
 
-figure(3)
-subplot(4,1,1)
-plot(time,rms_ch1,'k','LineWidth',1)
-ylim([min(rms_ch1)-10 max(rms_ch1)+10])
-ylabel('Channel 1 RMS')
-subplot(4,1,2)
-plot(time,rms_ch2,'k','LineWidth',1)
-ylim([min(rms_ch2)-10 max(rms_ch2)+10])
-ylabel('Channel 2 RMS')
-subplot(4,1,3)
-plot(time,rms_ch3,'k','LineWidth',1)
-ylim([min(rms_ch3)-10 max(rms_ch3)+10])
-ylabel('Channel 3 RMS')
-subplot(4,1,4)
-plot(time,rms_ch4,'k','LineWidth',1)
-ylim([min(rms_ch4)-10 max(rms_ch4)+10])
-xlabel('Time (sec)')
-ylabel('Channel 4 RMS')
+% figure(3)
+% subplot(4,1,1)
+% plot(time,rms_ch1,'k','LineWidth',1)
+% ylim([min(rms_ch1)-10 max(rms_ch1)+10])
+% ylabel('Channel 1 RMS')
+% subplot(4,1,2)
+% plot(time,rms_ch2,'k','LineWidth',1)
+% ylim([min(rms_ch2)-10 max(rms_ch2)+10])
+% ylabel('Channel 2 RMS')
+% subplot(4,1,3)
+% plot(time,rms_ch3,'k','LineWidth',1)
+% ylim([min(rms_ch3)-10 max(rms_ch3)+10])
+% ylabel('Channel 3 RMS')
+% subplot(4,1,4)
+% plot(time,rms_ch4,'k','LineWidth',1)
+% ylim([min(rms_ch4)-10 max(rms_ch4)+10])
+% xlabel('Time (sec)')
+% ylabel('Channel 4 RMS')
 
 figure()
 spectrogram(signal_ch1-mean(signal_ch1),5*Fs,0,0:0.5:5000,Fs,'yaxis')
