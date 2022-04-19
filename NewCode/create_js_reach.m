@@ -11,8 +11,8 @@ clear all
 clc
 
 data_folder = 'D:\JoystickExpts\data\';
-mouse_ID = 'Box_4_AN04'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '030922_63_79_020_10000_020_016_030_150_030_150_000';
+mouse_ID = 'Box_4_AN06'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
+data_ID = '040122_63_79_020_10000_020_016_030_150_030_150_000';
 condition_array = strsplit(data_ID,'_');
 
 cd([data_folder mouse_ID '\' data_ID])
@@ -28,11 +28,11 @@ peak_vel = [];
 Fs = 1000;
 
 lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
-    'PassbandFrequency',10,'PassbandRipple',0.05, ...
+    'PassbandFrequency',200,'PassbandRipple',0.01, ...
     'SampleRate',Fs);
 
 lpFilt2 = designfilt('lowpassiir','FilterOrder',8, ...
-    'PassbandFrequency',50,'PassbandRipple',0.05, ...
+    'PassbandFrequency',20,'PassbandRipple',0.01, ...
     'SampleRate',Fs);
 
 index_reward = [];

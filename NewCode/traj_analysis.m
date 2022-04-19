@@ -11,7 +11,7 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_4_AN06';
-data_ID = '032222_63_79_020_10000_020_016_030_150_030_150_000';
+data_ID = '040122_63_79_020_10000_020_016_030_150_030_150_000';
 condition_array = strsplit(data_ID,'_');
 
 pltOpt = 1;
@@ -38,6 +38,7 @@ target_hold_duration = [];
 hold_still_duration = [];
 reach_duration = [];
 path_length = [];
+straightness = [];
 peak_velocity = [];
 
 flag = [];
@@ -53,6 +54,7 @@ for i = 1:nTrial
     idx_on_hold = find(radial_pos_2<hold_threshold);
     temp = idx_on_hold(idx_on_hold<1*Fs_js);
     if ~isempty(temp)
+        i
         hold_offset = temp(end)+1;
         
         idx_off_hold = find(radial_pos_2>=hold_threshold);
@@ -63,7 +65,7 @@ for i = 1:nTrial
             hold_onset = 1;
         end
         hold_still_duration = [hold_still_duration hold_offset-hold_onset];
-        
+        hold_still_duration(i)
         %% target hold duration
         idx_off_target = find(radial_pos_2<=outer_threshold|radial_pos_2>=max_distance);
         temp = idx_off_target(idx_off_target<1*Fs_js);
@@ -71,15 +73,19 @@ for i = 1:nTrial
         temp2 = idx_off_target(idx_off_target>1*Fs_js);
         target_offset = temp2(1);
         target_hold_duration = [target_hold_duration target_offset-target_onset];
-        
+        target_hold_duration(i)
         %% Reach duration
         reach_duration = [reach_duration target_onset-hold_offset];
+        reach_duration(i)
         path_length = [path_length sum(d_euclidean(hold_offset:target_onset))];
-        
+        path_length(i)
+        D = sqrt((js_reach(i).traj_x_2(target_onset)-js_reach(i).traj_x_2(hold_offset)).^2+(js_reach(i).traj_y_2(target_onset)-js_reach(i).traj_y_2(hold_offset)).^2);
+        straightness = [straightness D/path_length(i)];
+        straightness(i)
         %% Peak velocity
         [temp_peak_velocity,loc_peak_velocity] = max(mag_vel_2(hold_offset-1:target_onset));
         peak_velocity = [peak_velocity temp_peak_velocity];
-        
+        peak_velocity(i)
         %% Find conincident velocity and RoC local minima
         
         [min_vel_2,loc_min_vel_2] = findpeaks(-mag_vel_2);
@@ -96,7 +102,11 @@ for i = 1:nTrial
         %% Reach start
         % the last coincident velocity and RoC local minima within hold
         idx_min_vel_hold = loc_min_vel_2(loc_min_vel_2<hold_offset&loc_min_vel_2>hold_onset);
-        start_time = idx_min_vel_hold(end);
+        if ~isempty(idx_min_vel_hold)
+            start_time = idx_min_vel_hold(end);
+        else
+            start_time = hold_onset;
+        end
         
         %% Reach end
         % the first coincident velocity and RoC local minima after reward
@@ -106,32 +116,53 @@ for i = 1:nTrial
         %     %% Plot data
         if pltOpt == 1
             time_reach = [1:length(js_reach(i).radial_pos_2)]./Fs_js;
+            %loc_min_vel_2(loc_min_vel_2==loc_min_vel_2_reward) = [];
             f1 = figure(1);
             movegui(f1,'northwest')
             ax1 = subplot(3,1,1);
-            plot(time_reach,radial_pos_2,'k','LineWidth',1)
+            plot(time_reach,radial_pos_2,'color',[45, 49, 66]/255,'LineWidth',1)
             hold on
-            plot(time_reach(target_onset:target_offset),radial_pos_2(target_onset:target_offset),'r','LineWidth',2)
-            plot(time_reach(hold_onset:hold_offset-1),radial_pos_2(hold_onset:hold_offset-1),'g','LineWidth',2)
-            plot(time_reach(hold_offset-1:target_onset),radial_pos_2(hold_offset-1:target_onset),'m','LineWidth',2)
-            plot(time_reach(loc_min_vel_2_reward),radial_pos_2(loc_min_vel_2_reward),'o','color','b','LineWidth',2)
-            plot(time_reach(start_time),radial_pos_2(start_time),'o','color','r','LineWidth',2)
-            plot(time_reach(end_time),radial_pos_2(end_time),'o','color','r','LineWidth',2)
+            plot(time_reach(target_onset:target_offset),radial_pos_2(target_onset:target_offset),'color',[204 45 53]/255,'LineWidth',2)
+            plot(time_reach(hold_onset:hold_offset-1),radial_pos_2(hold_onset:hold_offset-1),'color',[225 218 174]/255,'LineWidth',2)
+            plot(time_reach(start_time:target_onset),radial_pos_2(start_time:target_onset),'color',[255,147,79]/255,'LineWidth',2)
+            plot(time_reach(loc_min_vel_2_reward),radial_pos_2(loc_min_vel_2_reward),'o','color',[204 45 53]/255,'LineWidth',2)
+            plot(time_reach(start_time),radial_pos_2(start_time),'o','color',[5,142 217]/255,'LineWidth',2)
+            plot(time_reach(end_time),radial_pos_2(end_time),'o','color',[5,142 217]/255,'LineWidth',2)
             yline(hold_threshold,'--','color','k','LineWidth',2)
             yline(outer_threshold,'--','color','k','LineWidth',2)
             yline(max_distance,'--','color','k','LineWidth',2)
+            ylabel({'Radial Position','(mm)'})
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
             ax2 = subplot(3,1,2);
-            plot(time_reach,mag_vel_2,'k','LineWidth',1)
+            plot(time_reach,mag_vel_2,'color',[45, 49, 66]/255,'LineWidth',1)
             hold on
-            plot(time_reach(loc_min_vel_2),mag_vel_2(loc_min_vel_2),'o','color','r')
-            plot(time_reach(loc_min_vel_2_reward),mag_vel_2(loc_min_vel_2_reward),'o','color','b','LineWidth',2)
-            plot(time_reach(hold_offset-1+loc_peak_velocity),mag_vel_2(hold_offset-1+loc_peak_velocity),'o','color','g','LineWidth',2)
+            plot(time_reach(target_onset:target_offset),mag_vel_2(target_onset:target_offset),'color',[204 45 53]/255,'LineWidth',2)
+            plot(time_reach(hold_onset:hold_offset-1),mag_vel_2(hold_onset:hold_offset-1),'color',[225 218 174]/255,'LineWidth',2)
+            plot(time_reach(start_time:target_onset),mag_vel_2(start_time:target_onset),'color',[255,147,79]/255,'LineWidth',2)
+            plot(time_reach(start_time),mag_vel_2(start_time),'o','color',[5,142 217]/255,'LineWidth',2)
+            plot(time_reach(end_time),mag_vel_2(end_time),'o','color',[5,142 217]/255,'LineWidth',2)
+            plot(time_reach(loc_min_vel_2),mag_vel_2(loc_min_vel_2),'o','color',[132, 143, 162]/255,'LineWidth',1)
+            plot(time_reach(loc_min_vel_2_reward),mag_vel_2(loc_min_vel_2_reward),'o','color',[204 45 53]/255,'LineWidth',2)
+            plot(time_reach(hold_offset-1+loc_peak_velocity),mag_vel_2(hold_offset-1+loc_peak_velocity),'o','color',[255,147,79]/255,'LineWidth',2)
+            ylabel({'Speed','(mm/s)'})
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
             ax3 = subplot(3,1,3);
-            plot(time_reach,js_reach(i).RoC_2,'k','LineWidth',1)
+            plot(time_reach,js_reach(i).RoC_2,'color',[45, 49, 66]/255,'LineWidth',1)
             hold on
-            plot(time_reach(loc_min_vel_2),RoC_2(loc_min_vel_2),'o','color','r')
-            plot(time_reach(loc_min_vel_2_reward),RoC_2(loc_min_vel_2_reward),'o','color','b','LineWidth',2)
+            plot(time_reach(target_onset:target_offset),RoC_2(target_onset:target_offset),'color',[204 45 53]/255,'LineWidth',2)
+             plot(time_reach(hold_onset:hold_offset-1),RoC_2(hold_onset:hold_offset-1),'color',[225 218 174]/255,'LineWidth',2)
+            plot(time_reach(start_time:target_onset),RoC_2(start_time:target_onset),'color',[255,147,79]/255,'LineWidth',2)
+            plot(time_reach(start_time),RoC_2(start_time),'o','color',[5,142 217]/255,'LineWidth',2)
+            plot(time_reach(end_time),RoC_2(end_time),'o','color',[5,142 217]/255,'LineWidth',2)
+            plot(time_reach(loc_min_vel_2),RoC_2(loc_min_vel_2),'o','color',[132, 143, 162]/255,'LineWidth',1)
+            plot(time_reach(loc_min_vel_2_reward),RoC_2(loc_min_vel_2_reward),'o','color',[204 45 53]/255,'LineWidth',2)
+            xlabel('Time (sec)')
+            ylabel({'Radius of','Curvature'})
             set(gca, 'YScale', 'log')
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
             linkaxes([ax1 ax2 ax3],'x')
             
             f2 = figure(2);
@@ -150,10 +181,10 @@ for i = 1:nTrial
             movegui(f3,'south')
             plot(js_reach(i).traj_x_2,js_reach(i).traj_y_2,'k','LineWidth',1)
             hold on
-            plot(js_reach(i).traj_x_2(target_onset:target_offset),js_reach(i).traj_y_2(target_onset:target_offset),'r','LineWidth',2)
-            plot(js_reach(i).traj_x_2(hold_onset:hold_offset-1),js_reach(i).traj_y_2(hold_onset:hold_offset-1),'g','LineWidth',2)
-            plot(js_reach(i).traj_x_2(hold_offset-1:target_onset),js_reach(i).traj_y_2(hold_offset-1:target_onset),'m','LineWidth',2)
-            plot(js_reach(i).traj_x_2(loc_min_vel_2_reward),js_reach(i).traj_y_2(loc_min_vel_2_reward),'o','color','b','LineWidth',2)
+            plot(js_reach(i).traj_x_2(target_onset:target_offset),js_reach(i).traj_y_2(target_onset:target_offset),'color',[204 45 53]/255,'LineWidth',2)
+            plot(js_reach(i).traj_x_2(hold_onset:hold_offset-1),js_reach(i).traj_y_2(hold_onset:hold_offset-1),'color',[225 218 174]/255,'LineWidth',2)
+            plot(js_reach(i).traj_x_2(start_time:target_onset),js_reach(i).traj_y_2(start_time:target_onset),'color',[255,147,79]/255,'LineWidth',2)
+            plot(js_reach(i).traj_x_2(loc_min_vel_2_reward),js_reach(i).traj_y_2(loc_min_vel_2_reward),'o','color',[204 45 53]/255,'LineWidth',2)
             xlim([-7 7])
             ylim([-7 7])
             set(gca,'TickDir','out')
@@ -164,11 +195,13 @@ for i = 1:nTrial
             plot(max_distance*cos(theta),max_distance*sin(theta),'--','color','k')
             plot([0 7*cos(angle_1)],[0 7*sin(angle_1)],'color','m')
             plot([0 7*cos(angle_2)],[0 7*sin(angle_2)],'color','m')
+            xlabel('ML (mm)')
+            ylabel('AP (mm)')
             axis equal
             
-            prompt = 'Any issue? y/n: ';
+            prompt = 'Acceptable? y/n: ';
             str = input(prompt,'s');
-            if strcmp(str,'y')
+            if strcmp(str,'n')
                 flag = [flag i];
             end
             close all
@@ -192,6 +225,7 @@ save('target_hold_duration','target_hold_duration')
 save('reach_duration','reach_duration')
 save('peak_velocity','peak_velocity')
 save('path_length','path_length')
+save('straightness','straightness')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
 
@@ -203,5 +237,10 @@ peak_velocity
 
 figure(1)
 plot(reach_duration,peak_velocity,'o','LineWidth',1)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+
+figure(2)
+plot(path_length,straightness,'o','LineWidth',1)
 set(gca,'TickDir','out')
 set(gca,'box','off')

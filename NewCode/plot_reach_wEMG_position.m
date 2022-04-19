@@ -135,7 +135,7 @@ for n = 1:3
         %if isempty(js_reach(i).reach_flag)
         j = index_js_reach(i);
         k = index_EMG(i);
-        if ~isempty(js_reach(j).start_time) && reach_duration(j)<90
+        if ~isempty(js_reach(j).start_time) && path_length(j)<3.5
             start_idx_js = js_reach(j).start_time;
             end_idx_js = js_reach(j).start_time+0.15*Fs_js;
             
