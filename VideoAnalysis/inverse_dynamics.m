@@ -176,7 +176,7 @@ theta_1 = atan2(wrist_y.*x_prime+wrist_z.*z_prime,wrist_y.*z_prime-wrist_z.*x_pr
 theta_1_dot = gradient(theta_1);
 theta_1_ddot = gradient(theta_1_dot);
 
-figure(5)
+figure(6)
 ax1 = subplot(2,1,1);
 plot(rad2deg(theta_1),'color',[45, 49, 66]/255,'LineWidth',1)
 ylabel({'Shoulder','(deg)'})
@@ -211,4 +211,4 @@ Gamma_2 = theta_1_ddot.*(I_1 + m_2*r_2^2 + 2*(m_2*r_2*l_1)*cos(theta_2))...
     + theta_1_dot.^2.*(m_2*r_2*l_1*sin(theta_2))...
     + x_1_ddot.*(m_2*r_2*sin(theta_1+theta_2))...
     + y_1_ddot.*(m_2*r_2*cos(theta_1+theta_2));
-    
+
