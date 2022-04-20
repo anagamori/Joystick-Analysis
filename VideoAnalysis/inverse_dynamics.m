@@ -11,7 +11,12 @@ cd([data_folder mouse_ID '\' data_ID])
 load('data')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\VideoAnalysis')
 
-Fs_joint = 200;
+Fs = 200;
+
+lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
+    'PassbandFrequency',50,'PassbandRipple',0.01, ...
+    'SampleRate',Fs);
+
 
 k = 29;
 
@@ -157,40 +162,45 @@ set(gca,'box','off')
 linkaxes([ax1,ax2,ax3],'x')
 
 %%
+
 theta_2 = deg2rad(180-data(k).elbow_angle);
+theta_2 = filtfilt(lpFilt,theta_2);
 theta_2_dot = gradient(theta_2);
 theta_2_ddot = gradient(theta_2_dot);
 
 %wrist_angle = data(k).wrist_angle;
 
-l_1 = sqrt((shoulder_y-elbow_y).^2+(shoulder_z-elbow_z).^2);
+l_1 = sqrt((shoulder_y-elbow_y).^2+(shoulder_x-elbow_x).^2);
 l_1 = mean(l_1(1:100));
 r_1 = l_1/2;
-l_2 = sqrt((wrist_y-elbow_y).^2+(wrist_z-elbow_z).^2);
+l_2 = sqrt((wrist_y-elbow_y).^2+(wrist_x-elbow_x).^2);
 l_2 = mean(l_2(1:100));
 r_2 = l_2/2;
 
 x_prime = l_2*sin(deg2rad(theta_2));
 z_prime = l_1-l_2*cos(deg2rad(theta_2));
-theta_1 = atan2(wrist_y.*x_prime+wrist_z.*z_prime,wrist_y.*z_prime-wrist_z.*x_prime);
+theta_1 = atan2(wrist_x.*x_prime+wrist_y.*z_prime,wrist_y.*z_prime-wrist_x.*x_prime);
 theta_1_dot = gradient(theta_1);
 theta_1_ddot = gradient(theta_1_dot);
 
 figure(6)
-ax1 = subplot(2,1,1);
-plot(rad2deg(theta_1),'color',[45, 49, 66]/255,'LineWidth',1)
+ax1 = subplot(3,1,1);
+plot(hand_x,'color',[45, 49, 66]/255,'LineWidth',1)
+ylabel('X (mm)')
+ax2 = subplot(3,1,2);
+plot(rad2deg(theta_1)+360,'color',[45, 49, 66]/255,'LineWidth',1)
 ylabel({'Shoulder','(deg)'})
 title('Joystick')
 hold on 
 set(gca,'TickDir','out')
 set(gca,'box','off')
-ax2 = subplot(2,1,2);
+ax3 = subplot(3,1,3);
 plot(rad2deg(theta_2),'color',[45, 49, 66]/255,'LineWidth',1)
 ylabel({'Elbow','(deg)'})
 hold on 
 set(gca,'TickDir','out')
 set(gca,'box','off')
-linkaxes([ax1,ax2],'x')
+linkaxes([ax1,ax2,ax3],'x')
 
 
 m_1 = 0.005;
