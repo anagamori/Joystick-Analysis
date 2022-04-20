@@ -3,7 +3,7 @@ clear all
 clc
 
 Fs = 10000;
-load('noise_test_041522_v2')
+load('noise_test_3')
 
 movRMS = dsp.MovingRMS;
 
