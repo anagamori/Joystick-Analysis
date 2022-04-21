@@ -46,7 +46,7 @@ cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
 Fs_js = 1000;
 Fs_EMG = 10000;
-Fs_joint = 200;
+Fs_joint = 1000;
 
 
 lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
@@ -59,7 +59,7 @@ js_acc_all = [];
 mag_vel_all = [];
 max_vel_all = [];
 
-elbow_angle_all = [];
+theta_2_all = [];
 wrist_angle_all = [];
 
 EMG_biceps_all = [];
@@ -91,15 +91,20 @@ r_tri_js_acc_all = [];
 r_a_delt_js_acc_all = [];
 r_p_delt_js_acc_all = [];
 
-r_bi_angle_all = [];
-r_tri_angle_all = [];
-r_a_delt_angle_all = [];
-r_p_delt_angle_all = [];
+r_bi_theta_1_all = [];
+r_tri_theta_1_all = [];
+r_a_delt_theta_1_all = [];
+r_p_delt_theta_1_all = [];
+
+r_bi_theta_2_all = [];
+r_tri_theta_2_all = [];
+r_a_delt_theta_2_all = [];
+r_p_delt_theta_2_all = [];
 
 index_js_reach = 1:length(js_reach)-2;
 index_EMG = 1:length(EMG_struct);
 
-for i = 29; %1:length(index_js_reach) %nTrial
+for i = 29 %1:length(index_js_reach) %nTrial
     j = index_js_reach(i);
     k = index_EMG(i);
     %if isempty(js_reach(i).reach_flag)
@@ -152,31 +157,105 @@ for i = 29; %1:length(index_js_reach) %nTrial
             traj_x = js_reach(j).traj_x_2(analysis_window_js);
             traj_y = js_reach(j).traj_y_2(analysis_window_js);
             
-            elbow_angle = data(k).elbow_angle(analysis_window_joint)';
-            elbow_angle_all = [elbow_angle_all; data(k).elbow_angle(analysis_window_joint)'];
+            shoulder_x = data(k).shoulder_x(analysis_window_joint);
+            shoulder_y = data(k).shoulder_y(analysis_window_joint);
+            shoulder_z = data(k).shoulder_z(analysis_window_joint);
+            shoulder_mat = [shoulder_x -shoulder_y shoulder_z]';
+
+            x_1 = shoulder_x;
+            x_1_dot = gradient(x_1)*Fs_joint;
+            x_1_ddot = gradient(x_1_dot)*Fs_joint;
+            y_1 = shoulder_y;
+            y_1_dot = gradient(y_1)*Fs_joint;
+            y_1_ddot = gradient(y_1_dot)*Fs_joint;
+
+            elbow_x = data(k).elbow_x(analysis_window_joint);
+            elbow_y = data(k).elbow_y(analysis_window_joint);
+            elbow_z = data(k).elbow_z(analysis_window_joint);
+            elbow_mat = [elbow_x -elbow_y elbow_z]';
+
+            wrist_x = data(k).wrist_x(analysis_window_joint);
+            wrist_y = data(k).wrist_y(analysis_window_joint);
+            wrist_z = data(k).wrist_z(analysis_window_joint);
+            wrist_mat = [wrist_x -wrist_y wrist_z]';
+
+            hand_x = data(k).hand_x(analysis_window_joint);
+            hand_y = data(k).hand_y(analysis_window_joint);
+            hand_z = data(k).hand_z(analysis_window_joint);
+
+            joystick_x = data(k).joystick_x(analysis_window_joint);
+            joystick_y = -data(k).joystick_y(analysis_window_joint);
+            joystick_z = data(k).joystick_z(analysis_window_joint);
+            
+            u = [1;0;0]+shoulder_mat - shoulder_mat;
+            v = elbow_mat - shoulder_mat;
+            w = wrist_mat - elbow_mat;
+            %u = [elbow_mat(1,:)-shoulder_mat(1,:);shoulder_mat(2,:)-shoulder_mat(2,:);elbow_mat(3,:)-shoulder_mat(3,:)];
+            %u =  shoulder_ref_mat - shoulder_mat;
+
+            theta_1 = 2*pi-acos(dot(u,v)./(vecnorm(u).*vecnorm(v)));
+            theta_1 = theta_1';
+            theta_1_dot = gradient(theta_1)*Fs_joint;
+            theta_1_ddot = gradient(theta_1_dot)*Fs_joint;
+            theta_2 = acos(dot(v,w)./(vecnorm(v).*vecnorm(w)));
+            theta_2 = theta_2';
+            theta_2_dot = gradient(theta_2)*Fs_joint;
+            theta_2_ddot = gradient(theta_2_dot)*Fs_joint;
+            
+            l_1 = sqrt((data(k).shoulder_y-data(k).elbow_y).^2+(data(k).shoulder_x-data(k).elbow_x).^2+(data(k).shoulder_z-data(k).elbow_z).^2);
+            l_1 = mean(l_1(1:100))/1000;
+            r_1 = l_1/2;
+            l_2 = sqrt((data(k).elbow_y-data(k).wrist_y).^2+(data(k).elbow_x-data(k).wrist_x).^2+(data(k).elbow_z-data(k).wrist_z).^2);
+            l_2 = mean(l_2(1:100))/1000;
+            r_2 = l_2/2;
+            
+            m_1 = 0.00022154;
+            m_2 = 0.00020154;
+
+            I_1 = 1/12*l_1^2*m_1;
+            I_2 = 1/12*l_2^2*m_2;
+
+            Gamma_1 = theta_1_ddot.*(I_1+I_2 + m_1*r_1^2+m_2*(l_1^2+r_2^2) + 2*(m_2*r_2*l_1)*cos(theta_2))...
+                + theta_2_ddot.*(I_2 + m_2*(l_1^2+r_2^2) + m_2*r_2*l_1*cos(theta_2))...
+                - theta_2_dot.^2.*(m_2*r_2*l_1*sin(theta_2))...
+                - theta_1_dot.*theta_2_dot.*(2*m_2*r_2*l_1*sin(theta_2))...
+                - x_1_ddot.*((m_1*r_1+m_2*r_1)*sin(theta_1)+m_2*r_2*sin(theta_1+theta_2))...
+                - y_1_ddot.*((m_1*r_1+m_2*r_1)*cos(theta_1)+m_2*r_2*cos(theta_1+theta_2));
+
+            Gamma_2 = theta_1_ddot.*(I_1 + m_2*r_2^2 + 2*(m_2*r_2*l_1)*cos(theta_2))...
+                + theta_2_ddot.*(I_2 + m_2*r_2^2)...
+                + theta_1_dot.^2.*(m_2*r_2*l_1*sin(theta_2))...
+                + x_1_ddot.*(m_2*r_2*sin(theta_1+theta_2))...
+                + y_1_ddot.*(m_2*r_2*cos(theta_1+theta_2));
+
+
+            theta_1_all = [theta_1_all; theta_1'];
+            theta_2_all = [theta_2_all; theta_2'];
             wrist_angle_all = [wrist_angle_all; data(k).wrist_angle(analysis_window_joint)'];
             
             mag_vel_all = [mag_vel_all; js_reach(j).mag_vel_2(analysis_window_js)];
             
-            EMG_biceps = EMG_struct(k).biceps_zscore(analysis_window_EMG);
+            EMG_biceps_temp= abs(EMG_struct(k).biceps_raw);
+            EMG_biceps = conv(EMG_biceps_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
+            EMG_biceps = EMG_biceps(analysis_window_EMG);
             EMG_biceps_ds = downsample(EMG_biceps,10);
-            EMG_biceps_ds_2 = downsample(EMG_biceps,Fs_EMG/Fs_joint);
-            EMG_triceps = EMG_struct(k).triceps_zscore(analysis_window_EMG);
+        
+            EMG_triceps_temp= abs(EMG_struct(k).triceps_raw);
+            EMG_triceps = conv(EMG_triceps_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
+            EMG_triceps = EMG_triceps(analysis_window_EMG);
             EMG_triceps_ds = downsample(EMG_triceps,10);
-            EMG_triceps_ds_2 = downsample(EMG_triceps,Fs_EMG/Fs_joint);
-            
+                        
             EMG_a_delt_temp= abs(EMG_struct(k).a_delt_raw);
             EMG_a_delt = conv(EMG_a_delt_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
             EMG_a_delt = EMG_a_delt(analysis_window_EMG);
-            %EMG_a_delt_temp = filtfilt(lpFilt,abs(EMG_struct(k).a_delt_raw));
-            %EMG_a_delt = EMG_a_delt_temp(analysis_window_EMG);
-            %EMG_a_delt = EMG_struct(k).a_delt_zscore(analysis_window_EMG);
             EMG_a_delt_ds = downsample(EMG_a_delt,10);
-            EMG_a_delt_ds_2 = downsample(EMG_a_delt,Fs_EMG/Fs_joint);
-            EMG_p_delt = EMG_struct(k).p_delt_zscore(analysis_window_EMG);
-            EMG_p_delt_ds = downsample(EMG_p_delt,10);
-            EMG_p_delt_ds_2 = downsample(EMG_p_delt,Fs_EMG/Fs_joint);
             
+            EMG_p_delt_temp= abs(EMG_struct(k).p_delt_raw);
+            EMG_p_delt = conv(EMG_p_delt_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
+            EMG_p_delt = EMG_p_delt(analysis_window_EMG);
+            EMG_p_delt_ds = downsample(EMG_p_delt,10);
+            
+                  
             [r_bi_tri,lags] = xcorr(EMG_biceps-mean(EMG_biceps),EMG_triceps-mean(EMG_triceps),window_size*Fs_EMG/Fs_js,'coeff');
             r_bi_tri_all = [r_bi_tri_all r_bi_tri];
             [r_bi_a_delt,~] = xcorr(EMG_biceps-mean(EMG_biceps),EMG_a_delt-mean(EMG_a_delt),window_size*Fs_EMG/Fs_js,'coeff');
@@ -217,14 +296,41 @@ for i = 29; %1:length(index_js_reach) %nTrial
             r_a_delt_js_acc_all = [r_a_delt_js_acc_all r_a_delt_js_acc];
             r_p_delt_js_acc_all = [r_p_delt_js_acc_all r_p_delt_js_acc];
             
-            [r_bi_angle,lags_angle] = xcorr(EMG_biceps_ds_2-mean(EMG_biceps_ds_2),elbow_angle-mean(elbow_angle),round(window_size*Fs_joint/Fs_js),'coeff');
-            [r_tri_angle,~] = xcorr(EMG_triceps_ds_2-mean(EMG_triceps_ds_2),elbow_angle-mean(elbow_angle),round(window_size*Fs_joint/Fs_js),'coeff');
-            [r_a_delt_angle,~] = xcorr(EMG_a_delt_ds_2-mean(EMG_a_delt_ds_2),elbow_angle-mean(elbow_angle),round(window_size*Fs_joint/Fs_js),'coeff');
-            [r_p_delt_angle,~] = xcorr(EMG_p_delt_ds_2-mean(EMG_p_delt_ds_2),elbow_angle-mean(elbow_angle),round(window_size*Fs_joint/Fs_js),'coeff');
-            r_bi_angle_all = [r_bi_angle_all r_bi_angle];
-            r_tri_angle_all = [r_tri_angle_all r_tri_angle];
-            r_a_delt_angle_all = [r_a_delt_angle_all r_a_delt_angle];
-            r_p_delt_angle_all = [r_p_delt_angle_all r_p_delt_angle];
+            [r_bi_theta_1,lags_theta_1] = xcorr(EMG_biceps_ds-mean(EMG_biceps_ds),theta_1-mean(theta_1),window_size,'coeff');
+            [r_tri_theta_1,~] = xcorr(EMG_triceps_ds-mean(EMG_triceps_ds),theta_1-mean(theta_1),window_size,'coeff');
+            [r_a_delt_theta_1,~] = xcorr(EMG_a_delt_ds-mean(EMG_a_delt_ds),theta_1-mean(theta_1),window_size,'coeff');
+            [r_p_delt_theta_1,~] = xcorr(EMG_p_delt_ds-mean(EMG_p_delt_ds),theta_1-mean(theta_1),window_size,'coeff');
+            r_bi_theta_1_all = [r_bi_theta_1_all r_bi_theta_1];
+            r_tri_theta_1_all = [r_tri_theta_1_all r_tri_theta_1];
+            r_a_delt_theta_1_all = [r_a_delt_theta_1_all r_a_delt_theta_1];
+            r_p_delt_theta_1_all = [r_p_delt_theta_1_all r_p_delt_theta_1];
+            
+            [r_bi_theta_2,lags_theta_2] = xcorr(EMG_biceps_ds-mean(EMG_biceps_ds),theta_2-mean(theta_2),window_size,'coeff');
+            [r_tri_theta_2,~] = xcorr(EMG_triceps_ds-mean(EMG_triceps_ds),theta_2-mean(theta_2),window_size,'coeff');
+            [r_a_delt_theta_2,~] = xcorr(EMG_a_delt_ds-mean(EMG_a_delt_ds),theta_2-mean(theta_2),window_size,'coeff');
+            [r_p_delt_theta_2,~] = xcorr(EMG_p_delt_ds-mean(EMG_p_delt_ds),theta_2-mean(theta_2),window_size,'coeff');
+            r_bi_theta_2_all = [r_bi_theta_2_all r_bi_theta_2];
+            r_tri_theta_2_all = [r_tri_theta_2_all r_tri_theta_2];
+            r_a_delt_theta_2_all = [r_a_delt_theta_2_all r_a_delt_theta_2];
+            r_p_delt_theta_2_all = [r_p_delt_theta_2_all r_p_delt_theta_2];
+            
+            [r_bi_Gamma_1,lags_Gamma_1] = xcorr(EMG_biceps_ds-mean(EMG_biceps_ds),Gamma_1-mean(Gamma_1),window_size,'coeff');
+            [r_tri_Gamma_1,~] = xcorr(EMG_triceps_ds-mean(EMG_triceps_ds),Gamma_1-mean(Gamma_1),window_size,'coeff');
+            [r_a_delt_Gamma_1,~] = xcorr(EMG_a_delt_ds-mean(EMG_a_delt_ds),Gamma_1-mean(Gamma_1),window_size,'coeff');
+            [r_p_delt_Gamma_1,~] = xcorr(EMG_p_delt_ds-mean(EMG_p_delt_ds),Gamma_1-mean(Gamma_1),window_size,'coeff');
+            r_bi_Gamma_1_all = [r_bi_Gamma_1_all r_bi_Gamma_1];
+            r_tri_Gamma_1_all = [r_tri_Gamma_1_all r_tri_Gamma_1];
+            r_a_delt_Gamma_1_all = [r_a_delt_Gamma_1_all r_a_delt_Gamma_1];
+            r_p_delt_Gamma_1_all = [r_p_delt_Gamma_1_all r_p_delt_Gamma_1];
+            
+            [r_bi_Gamma_2,lags_Gamma_2] = xcorr(EMG_biceps_ds-mean(EMG_biceps_ds),Gamma_2-mean(Gamma_2),window_size,'coeff');
+            [r_tri_Gamma_2,~] = xcorr(EMG_triceps_ds-mean(EMG_triceps_ds),Gamma_2-mean(Gamma_2),window_size,'coeff');
+            [r_a_delt_Gamma_2,~] = xcorr(EMG_a_delt_ds-mean(EMG_a_delt_ds),Gamma_2-mean(Gamma_2),window_size,'coeff');
+            [r_p_delt_Gamma_2,~] = xcorr(EMG_p_delt_ds-mean(EMG_p_delt_ds),Gamma_2-mean(Gamma_2),window_size,'coeff');
+            r_bi_Gamma_2_all = [r_bi_Gamma_2_all r_bi_Gamma_2];
+            r_tri_Gamma_2_all = [r_tri_Gamma_2_all r_tri_Gamma_2];
+            r_a_delt_Gamma_2_all = [r_a_delt_Gamma_2_all r_a_delt_Gamma_2];
+            r_p_delt_Gamma_2_all = [r_p_delt_Gamma_2_all r_p_delt_Gamma_2];
             
             EMG_biceps_all = [EMG_biceps_all; EMG_biceps'];
             EMG_triceps_all = [EMG_triceps_all; EMG_triceps'];
@@ -238,43 +344,49 @@ for i = 29; %1:length(index_js_reach) %nTrial
             
             f1 = figure(1);
             movegui(f1,'northwest')
-            ax1 = subplot(6,1,1);
+            ax1 = subplot(7,1,1);
             plot1 = plot(time_js,js_reach(j).radial_pos_2(analysis_window_js),'LineWidth',1,'color','k');
             plot1.Color(4) = 0.5;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
-            ax2 = subplot(6,1,2);
-            plot1 = plot(time_joint,data(k).elbow_angle(analysis_window_joint),'LineWidth',1,'color','k');
+            ax2 = subplot(7,1,2);
+            plot1 = plot(time_joint,theta_1,'LineWidth',1,'color','k');
             plot1.Color(4) = 0.5;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
-            ax3 = subplot(6,1,3);
+            ax3 = subplot(7,1,3);
+            plot1 = plot(time_joint,theta_2,'LineWidth',1,'color','k');
+            plot1.Color(4) = 0.5;
+            hold on
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            ax4 = subplot(7,1,4);
             plot3 = plot(time_EMG,EMG_biceps,'LineWidth',1,'color',[35 140 204]/255);
             plot3.Color(4) = 0.5;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
-            ax4 = subplot(6,1,4);
+            ax5 = subplot(7,1,5);
             plot4 = plot(time_EMG,EMG_triceps,'LineWidth',1,'color',[204 45 52]/255);
             plot4.Color(4) = 0.5;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
-            ax5 = subplot(6,1,5);
+            ax6 = subplot(7,1,6);
             plot5 = plot(time_EMG,EMG_a_delt,'LineWidth',1,'color',[45 49 66]/255);
             plot5.Color(4) = 0.5;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
-            ax6 = subplot(6,1,6);
+            ax7 = subplot(7,1,7);
             plot6 = plot(time_EMG,EMG_p_delt,'LineWidth',1,'color',[247 146 83]/255);
             plot6.Color(4) = 0.5;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
-            linkaxes([ax1 ax2 ax3 ax4 ax5 ax6],'x')
+            linkaxes([ax1 ax2 ax3 ax4 ax5 ax6 ax7],'x')
             
             f2 = figure(2);
             movegui(f2,'southwest')
@@ -448,25 +560,103 @@ for i = 29; %1:length(index_js_reach) %nTrial
             
             figure(9)
             subplot(2,2,1)
-            plot1 = plot(lags_angle/Fs_joint*1000,r_bi_angle,'LineWidth',1,'color',[35 140 204]/255);
+            plot1 = plot(lags_theta_1/Fs_joint*1000,r_bi_theta_1,'LineWidth',1,'color',[35 140 204]/255);
             plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
             subplot(2,2,2)
-            plot1 = plot(lags_angle/Fs_joint*1000,r_tri_angle,'LineWidth',1,'color',[204 45 52]/255);
+            plot1 = plot(lags_theta_1/Fs_joint*1000,r_tri_theta_1,'LineWidth',1,'color',[204 45 52]/255);
             plot1.Color(4) = 0.5;
             hold on
             set(gca,'TickDir','out')
             set(gca,'box','off')
             subplot(2,2,3)
-            plot1 = plot(lags_angle/Fs_joint*1000,r_a_delt_angle,'LineWidth',1,'color',[45 49 66]/255);
+            plot1 = plot(lags_theta_1/Fs_joint*1000,r_a_delt_theta_1,'LineWidth',1,'color',[45 49 66]/255);
             plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
             hold on
             subplot(2,2,4)
-            plot1 = plot(lags_angle/Fs_joint*1000,r_p_delt_angle,'LineWidth',1,'color',[247 146 83]/255);
+            plot1 = plot(lags_theta_1/Fs_joint*1000,r_p_delt_theta_1,'LineWidth',1,'color',[247 146 83]/255);
+            plot1.Color(4) = 0.5;
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            hold on
+            
+            figure(10)
+            subplot(2,2,1)
+            plot1 = plot(lags_theta_2/Fs_joint*1000,r_bi_theta_2,'LineWidth',1,'color',[35 140 204]/255);
+            plot1.Color(4) = 0.5;
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            hold on
+            subplot(2,2,2)
+            plot1 = plot(lags_theta_2/Fs_joint*1000,r_tri_theta_2,'LineWidth',1,'color',[204 45 52]/255);
+            plot1.Color(4) = 0.5;
+            hold on
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            subplot(2,2,3)
+            plot1 = plot(lags_theta_2/Fs_joint*1000,r_a_delt_theta_2,'LineWidth',1,'color',[45 49 66]/255);
+            plot1.Color(4) = 0.5;
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            hold on
+            subplot(2,2,4)
+            plot1 = plot(lags_theta_2/Fs_joint*1000,r_p_delt_theta_2,'LineWidth',1,'color',[247 146 83]/255);
+            plot1.Color(4) = 0.5;
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            hold on
+            
+            figure(11)
+            subplot(2,2,1)
+            plot1 = plot(lags_Gamma_1/Fs_joint*1000,r_bi_Gamma_1,'LineWidth',1,'color',[35 140 204]/255);
+            plot1.Color(4) = 0.5;
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            hold on
+            subplot(2,2,2)
+            plot1 = plot(lags_Gamma_1/Fs_joint*1000,r_tri_Gamma_1,'LineWidth',1,'color',[204 45 52]/255);
+            plot1.Color(4) = 0.5;
+            hold on
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            subplot(2,2,3)
+            plot1 = plot(lags_Gamma_1/Fs_joint*1000,r_a_delt_Gamma_1,'LineWidth',1,'color',[45 49 66]/255);
+            plot1.Color(4) = 0.5;
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            hold on
+            subplot(2,2,4)
+            plot1 = plot(lags_Gamma_1/Fs_joint*1000,r_p_delt_Gamma_1,'LineWidth',1,'color',[247 146 83]/255);
+            plot1.Color(4) = 0.5;
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            hold on
+            
+            figure(12)
+            subplot(2,2,1)
+            plot1 = plot(lags_Gamma_2/Fs_joint*1000,r_bi_Gamma_2,'LineWidth',1,'color',[35 140 204]/255);
+            plot1.Color(4) = 0.5;
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            hold on
+            subplot(2,2,2)
+            plot1 = plot(lags_Gamma_2/Fs_joint*1000,r_tri_Gamma_2,'LineWidth',1,'color',[204 45 52]/255);
+            plot1.Color(4) = 0.5;
+            hold on
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            subplot(2,2,3)
+            plot1 = plot(lags_Gamma_2/Fs_joint*1000,r_a_delt_Gamma_2,'LineWidth',1,'color',[45 49 66]/255);
+            plot1.Color(4) = 0.5;
+            set(gca,'TickDir','out')
+            set(gca,'box','off')
+            hold on
+            subplot(2,2,4)
+            plot1 = plot(lags_Gamma_2/Fs_joint*1000,r_p_delt_Gamma_2,'LineWidth',1,'color',[247 146 83]/255);
             plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
@@ -501,7 +691,7 @@ yline(outer_threshold,'--','color','k','LineWidth',2)
 yline(max_distance,'--','color','k','LineWidth',2)
 ylabel({'Radial','Postion (mm)'})
 subplot(6,1,2)
-plot(time_joint,mean(elbow_angle_all),'LineWidth',2,'color','k')
+plot(time_joint,mean(theta_2_all),'LineWidth',2,'color','k')
 ylabel({'Elbow','Angle (deg)'})
 subplot(6,1,3)
 plot(time_EMG,mean(EMG_biceps_all),'LineWidth',2,'color','k')
@@ -570,7 +760,7 @@ xlabel('Time (ms)')
 % linkaxes([ax1 ax2 ax3 ax4 ax5 ax6 ax7],'x')
 
 figure(4)
-ax1 = subplot(6,1,1);
+ax1 = subplot(7,1,1);
 plot(time_js,mean(radial_pos_all),'LineWidth',2,'color','k')
 yline(hold_threshold,'--','color','k','LineWidth',2)
 yline(outer_threshold,'--','color','k','LineWidth',2)
@@ -578,33 +768,38 @@ yline(max_distance,'--','color','k','LineWidth',2)
 ylabel({'Position';'(mm/s)'})
 set(gca,'TickDir','out')
 set(gca,'box','off')
-ax2 = subplot(6,1,2);
-plot(time_joint,mean(elbow_angle_all),'LineWidth',2,'color','k')
+ax2 = subplot(7,1,2);
+plot(time_joint,mean(theta_1_all),'LineWidth',2,'color','k')
 ylabel({'Elbow','Angle (deg)'})
 set(gca,'TickDir','out')
 set(gca,'box','off')
-ax4 = subplot(6,1,3);
+ax3 = subplot(7,1,3);
+plot(time_joint,mean(theta_2_all),'LineWidth',2,'color','k')
+ylabel({'Elbow','Angle (deg)'})
+set(gca,'TickDir','out')
+set(gca,'box','off')
+ax4 = subplot(7,1,4);
 patch([time_EMG fliplr(time_EMG)], [y_bi(:)-se_bi(:);  flipud(y_bi(:)+se_bi(:))],[35 140 204]/255, 'FaceAlpha',0.2, 'EdgeColor','none')
 hold on
 plot(time_EMG,mean(EMG_biceps_all),'LineWidth',2,'color',[35 140 204]/255)
 ylabel('Biceps')
 set(gca,'TickDir','out')
 set(gca,'box','off')
-ax5 = subplot(6,1,4);
+ax5 = subplot(7,1,5);
 patch([time_EMG fliplr(time_EMG)], [y_tri(:)-se_tri(:);  flipud(y_tri(:)+se_tri(:))],[204 45 52]/255, 'FaceAlpha',0.2, 'EdgeColor','none')
 hold on
 plot(time_EMG,mean(EMG_triceps_all),'LineWidth',2,'color',[204 45 52]/255)
 ylabel('Triceps')
 set(gca,'TickDir','out')
 set(gca,'box','off')
-ax6 = subplot(6,1,5);
+ax6 = subplot(7,1,6);
 patch([time_EMG fliplr(time_EMG)], [y_ad(:)-se_ad(:);  flipud(y_ad(:)+se_ad(:))],[45 49 66]/255, 'FaceAlpha',0.2, 'EdgeColor','none')
 hold on
 plot(time_EMG,mean(EMG_a_delt_all),'LineWidth',2,'color',[45 49 66]/255)
 ylabel('CB')
 set(gca,'TickDir','out')
 set(gca,'box','off')
-ax7 = subplot(6,1,6);
+ax7 = subplot(7,1,7);
 patch([time_EMG fliplr(time_EMG)], [y_pd(:)-se_pd(:);  flipud(y_pd(:)+se_pd(:))],[247 146 83]/255, 'FaceAlpha',0.2, 'EdgeColor','none')
 hold on
 plot(time_EMG,mean(EMG_p_delt_all),'LineWidth',2,'color',[247 146 83]/255)
@@ -612,7 +807,7 @@ ylabel('AD')
 xlabel('Time (ms)')
 set(gca,'TickDir','out')
 set(gca,'box','off')
-linkaxes([ax1 ax2 ax4 ax5 ax6 ax7],'x')
+linkaxes([ax1 ax2 ax3 ax4 ax5 ax6 ax7],'x')
 %
 % figure(3)
 % subplot(3,1,1)
@@ -721,7 +916,7 @@ set(gca,'box','off')
 figure(9)
 subplot(2,2,1)
 %title('Position')
-plot(lags_angle/Fs_joint*1000,mean(r_bi_angle_all,2),'LineWidth',2,'color',[35 140 204]/255)
+plot(lags_angle/Fs_joint*1000,mean(r_bi_theta_2_all,2),'LineWidth',2,'color',[35 140 204]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')
 subplot(2,2,2)
