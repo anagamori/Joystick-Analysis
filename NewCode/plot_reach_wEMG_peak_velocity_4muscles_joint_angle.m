@@ -40,7 +40,7 @@ load('data_processed')
 load('flag_noise')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
-cd([data_folder mouse_ID '\' data_ID])
+cd([data_folder mouse_ID '\' data_ID ,'_v4'])
 load('data')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
@@ -59,6 +59,7 @@ js_acc_all = [];
 mag_vel_all = [];
 max_vel_all = [];
 
+theta_1_all = [];
 theta_2_all = [];
 wrist_angle_all = [];
 
@@ -101,6 +102,16 @@ r_tri_theta_2_all = [];
 r_a_delt_theta_2_all = [];
 r_p_delt_theta_2_all = [];
 
+r_bi_Gamma_1_all = [];
+r_tri_Gamma_1_all = [];
+r_a_delt_Gamma_1_all = [];
+r_p_delt_Gamma_1_all = [];
+
+r_bi_Gamma_2_all = [];
+r_tri_Gamma_2_all = [];
+r_a_delt_Gamma_2_all = [];
+r_p_delt_Gamma_2_all = [];
+
 index_js_reach = 1:length(js_reach)-2;
 index_EMG = 1:length(EMG_struct);
 
@@ -124,7 +135,7 @@ for i = 29 %1:length(index_js_reach) %nTrial
         start_idx_joint = round(start_idx_js*Fs_joint/Fs_js);
         end_idx_joint = round(end_idx_js*Fs_joint/Fs_js);
         
-        start_offset = -0.05;
+        start_offset = -0.07;
         end_offset = 0.05;
         
         time_js = start_offset:1/Fs_js:end_offset;
@@ -228,7 +239,8 @@ for i = 29 %1:length(index_js_reach) %nTrial
                 + x_1_ddot.*(m_2*r_2*sin(theta_1+theta_2))...
                 + y_1_ddot.*(m_2*r_2*cos(theta_1+theta_2));
 
-
+            theta_1 = rad2deg(theta_1);
+            theta_2 = rad2deg(theta_2);
             theta_1_all = [theta_1_all; theta_1'];
             theta_2_all = [theta_2_all; theta_2'];
             wrist_angle_all = [wrist_angle_all; data(k).wrist_angle(analysis_window_joint)'];
@@ -564,6 +576,7 @@ for i = 29 %1:length(index_js_reach) %nTrial
             plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
+            title('Shoulder')
             hold on
             subplot(2,2,2)
             plot1 = plot(lags_theta_1/Fs_joint*1000,r_tri_theta_1,'LineWidth',1,'color',[204 45 52]/255);
@@ -590,6 +603,7 @@ for i = 29 %1:length(index_js_reach) %nTrial
             plot1.Color(4) = 0.5;
             set(gca,'TickDir','out')
             set(gca,'box','off')
+            title('Elbow')
             hold on
             subplot(2,2,2)
             plot1 = plot(lags_theta_2/Fs_joint*1000,r_tri_theta_2,'LineWidth',1,'color',[204 45 52]/255);
@@ -684,25 +698,28 @@ se_pd = std(EMG_p_delt_all,[],1)./(sqrt(size(EMG_p_delt_all,1)));
 
 
 figure(1)
-subplot(6,1,1)
+subplot(7,1,1)
 plot(time_js,mean(radial_pos_all),'LineWidth',2,'color','k')
 yline(hold_threshold,'--','color','k','LineWidth',2)
 yline(outer_threshold,'--','color','k','LineWidth',2)
 yline(max_distance,'--','color','k','LineWidth',2)
 ylabel({'Radial','Postion (mm)'})
-subplot(6,1,2)
+subplot(7,1,2)
+plot(time_joint,mean(theta_1_all),'LineWidth',2,'color','k')
+ylabel({'Shoulder','Angle (deg)'})
+subplot(7,1,3)
 plot(time_joint,mean(theta_2_all),'LineWidth',2,'color','k')
 ylabel({'Elbow','Angle (deg)'})
-subplot(6,1,3)
+subplot(7,1,4)
 plot(time_EMG,mean(EMG_biceps_all),'LineWidth',2,'color','k')
 ylabel({'Biceps','(z-score)'})
-subplot(6,1,4)
+subplot(7,1,7)
 plot(time_EMG,mean(EMG_triceps_all),'LineWidth',2,'color','k')
 ylabel({'Triceps','(z-score)'})
-subplot(6,1,5)
+subplot(7,1,6)
 plot(time_EMG,mean(EMG_a_delt_all),'LineWidth',2,'color','k')
 ylabel({'CB','(z-score)'})
-subplot(6,1,6)
+subplot(7,1,7)
 plot(time_EMG,mean(EMG_p_delt_all),'LineWidth',2,'color','k')
 ylabel({'AD','(z-score)'})
 xlabel('Time (ms)')
@@ -916,18 +933,75 @@ set(gca,'box','off')
 figure(9)
 subplot(2,2,1)
 %title('Position')
-plot(lags_angle/Fs_joint*1000,mean(r_bi_theta_2_all,2),'LineWidth',2,'color',[35 140 204]/255)
+plot(lags_theta_1/Fs_joint*1000,mean(r_bi_theta_1_all,2),'LineWidth',2,'color',[35 140 204]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')
 subplot(2,2,2)
-plot(lags_angle/Fs_joint*1000,mean(r_tri_angle_all,2),'LineWidth',2,'color',[204 45 52]/255)
+plot(lags_theta_1/Fs_joint*1000,mean(r_tri_theta_1_all,2),'LineWidth',2,'color',[204 45 52]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')
 subplot(2,2,3)
-plot(lags_angle/Fs_joint*1000,mean(r_a_delt_angle_all,2),'LineWidth',2,'color',[45 49 66]/255)
+plot(lags_theta_1/Fs_joint*1000,mean(r_a_delt_theta_1_all,2),'LineWidth',2,'color',[45 49 66]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')
 subplot(2,2,4)
-plot(lags_angle/Fs_joint*1000,mean(r_p_delt_angle_all,2),'LineWidth',2,'color',[247 146 83]/255)
+plot(lags_theta_1/Fs_joint*1000,mean(r_p_delt_theta_1_all,2),'LineWidth',2,'color',[247 146 83]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+
+figure(10)
+subplot(2,2,1)
+%title('Position')
+plot(lags_theta_1/Fs_joint*1000,mean(r_bi_theta_2_all,2),'LineWidth',2,'color',[35 140 204]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+subplot(2,2,2)
+plot(lags_theta_1/Fs_joint*1000,mean(r_tri_theta_2_all,2),'LineWidth',2,'color',[204 45 52]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+subplot(2,2,3)
+plot(lags_theta_1/Fs_joint*1000,mean(r_a_delt_theta_2_all,2),'LineWidth',2,'color',[45 49 66]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+subplot(2,2,4)
+plot(lags_theta_1/Fs_joint*1000,mean(r_p_delt_theta_2_all,2),'LineWidth',2,'color',[247 146 83]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+
+figure(11)
+subplot(2,2,1)
+%title('Position')
+plot(lags_Gamma_1/Fs_joint*1000,mean(r_bi_Gamma_1_all,2),'LineWidth',2,'color',[35 140 204]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+subplot(2,2,2)
+plot(lags_Gamma_1/Fs_joint*1000,mean(r_tri_Gamma_1_all,2),'LineWidth',2,'color',[204 45 52]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+subplot(2,2,3)
+plot(lags_Gamma_1/Fs_joint*1000,mean(r_a_delt_Gamma_1_all,2),'LineWidth',2,'color',[45 49 66]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+subplot(2,2,4)
+plot(lags_Gamma_1/Fs_joint*1000,mean(r_p_delt_Gamma_1_all,2),'LineWidth',2,'color',[247 146 83]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+
+figure(12)
+subplot(2,2,1)
+%title('Position')
+plot(lags_Gamma_1/Fs_joint*1000,mean(r_bi_Gamma_2_all,2),'LineWidth',2,'color',[35 140 204]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+subplot(2,2,2)
+plot(lags_Gamma_1/Fs_joint*1000,mean(r_tri_Gamma_2_all,2),'LineWidth',2,'color',[204 45 52]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+subplot(2,2,3)
+plot(lags_Gamma_1/Fs_joint*1000,mean(r_a_delt_Gamma_2_all,2),'LineWidth',2,'color',[45 49 66]/255)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+subplot(2,2,4)
+plot(lags_Gamma_1/Fs_joint*1000,mean(r_p_delt_Gamma_2_all,2),'LineWidth',2,'color',[247 146 83]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')

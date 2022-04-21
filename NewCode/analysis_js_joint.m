@@ -39,7 +39,7 @@ load('flag_noise')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
 
-cd([data_folder mouse_ID '\' data_ID '_v2'])
+cd([data_folder mouse_ID '\' data_ID '_v3'])
 load('data')
 cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
@@ -114,32 +114,32 @@ for i = 29 %1:length(index_js_reach) %nTrial
     radial_pos = js_reach(j).radial_pos_2;
     
     time_joint = [1:round(end_time*Fs_joint)]./Fs_joint;
-    js_x_anipose = data(k).Joystick_x-data(k).Joystick_x(1);
-    js_y_anipose = data(k).Joystick_y-data(k).Joystick_y(1);
-    js_z_anipose = data(k).Joystick_z-data(k).Joystick_z(1);
+    js_x_anipose = data(k).joystick_x-data(k).joystick_x(1);
+    js_y_anipose = data(k).joystick_y-data(k).joystick_y(1);
+    js_z_anipose = data(k).joystick_z-data(k).joystick_z(1);
     
-    hand_x_anipose = data(k).Hand_x-data(k).Hand_x(1);
-    hand_y_anipose = data(k).Hand_y-data(k).Hand_y(1);
-    hand_z_anipose = data(k).Hand_z-data(k).Hand_z(1);
+    hand_x_anipose = data(k).hand_x-data(k).hand_x(1);
+    hand_y_anipose = data(k).hand_y-data(k).hand_y(1);
+    hand_z_anipose = data(k).hand_z-data(k).hand_z(1);
     
-    shoulder_x_anipose = data(k).Shoulder_x;
-    shoulder_y_anipose = data(k).Shoulder_y;
-    shoulder_z_anipose = data(k).Shoulder_z;
+    shoulder_x_anipose = data(k).shoulder_x;
+    shoulder_y_anipose = data(k).shoulder_y;
+    shoulder_z_anipose = data(k).shoulder_z;
     
-    elbow_x_anipose = data(k).Elbow_x;
-    elbow_y_anipose = data(k).Elbow_y;
-    elbow_z_anipose = data(k).Elbow_z;
+    elbow_x_anipose = data(k).elbow_x;
+    elbow_y_anipose = data(k).elbow_y;
+    elbow_z_anipose = data(k).elbow_z;
     
-    wrist_x_anipose = data(k).Wrist_x;
-    wrist_y_anipose = data(k).Wrist_y;
-    wrist_z_anipose = data(k).Wrist_z;
+    wrist_x_anipose = data(k).wrist_x;
+    wrist_y_anipose = data(k).wrist_y;
+    wrist_z_anipose = data(k).wrist_z;
     
     elbow_angle = 180-data(k).elbow_angle;
     wrist_angle = data(k).wrist_angle;
     
-    l1 = sqrt((shoulder_x_anipose-elbow_x_anipose).^2+(shoulder_z_anipose-elbow_z_anipose).^2);
+    l1 = sqrt((shoulder_x_anipose-elbow_x_anipose).^2+(shoulder_y_anipose-elbow_y_anipose).^2);
     l1 = mean(l1(1:100));
-    l2 = sqrt((wrist_x_anipose-elbow_x_anipose).^2+(wrist_z_anipose-elbow_z_anipose).^2);
+    l2 = sqrt((wrist_x_anipose-elbow_x_anipose).^2+(wrist_y_anipose-elbow_y_anipose).^2);
     l2 = mean(l2(1:100));
     
     x_prime = l2*sin(deg2rad(elbow_angle));
@@ -205,7 +205,7 @@ for i = 29 %1:length(index_js_reach) %nTrial
     
     f3 = figure(3);
     movegui(f3,'southeast')
-    plot(js_x_anipose(1:round(end_time*Fs_joint)),js_y_anipose(1:round(end_time*Fs_joint)),'k','LineWidth',1)
+    plot(-js_y_anipose(1:round(end_time*Fs_joint))-js_y_anipose(1),js_x_anipose(1:round(end_time*Fs_joint))-js_x_anipose(1),'k','LineWidth',1)
     xlim([-7 7])
     ylim([-7 7])
     set(gca,'TickDir','out')
