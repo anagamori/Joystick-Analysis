@@ -252,10 +252,10 @@ set(gca,'TickDir','out')
 set(gca,'box','off')
 linkaxes([ax1,ax2,ax3],'x')
 
-
+g = 9.81;
 m_1 = 0.00022154;
 m_2 = 0.00020154;
-    
+
 I_1 = 1/12*l_1^2*m_1;
 I_2 = 1/12*l_2^2*m_2;
 
@@ -264,13 +264,15 @@ Gamma_1 = theta_1_ddot.*(I_1+I_2 + m_1*r_1^2+m_2*(l_1^2+r_2^2) + 2*(m_2*r_2*l_1)
     - theta_2_dot.^2.*(m_2*r_2*l_1*sin(theta_2))...
     - theta_1_dot.*theta_2_dot.*(2*m_2*r_2*l_1*sin(theta_2))...
     - x_1_ddot.*((m_1*r_1+m_2*r_1)*sin(theta_1)+m_2*r_2*sin(theta_1+theta_2))...
-    - y_1_ddot.*((m_1*r_1+m_2*r_1)*cos(theta_1)+m_2*r_2*cos(theta_1+theta_2));
+    - y_1_ddot.*((m_1*r_1+m_2*r_1)*cos(theta_1)+m_2*r_2*cos(theta_1+theta_2)) ...
+    + m_1*g*r_1*cos(theta_1) + m_2*g*(l_1*cos(theta_1) + r_2*cos(theta_1+pi-theta_2));
 
 Gamma_2 = theta_1_ddot.*(I_1 + m_2*r_2^2 + 2*(m_2*r_2*l_1)*cos(theta_2))...
     + theta_2_ddot.*(I_2 + m_2*r_2^2)...
     + theta_1_dot.^2.*(m_2*r_2*l_1*sin(theta_2))...
     + x_1_ddot.*(m_2*r_2*sin(theta_1+theta_2))...
-    + y_1_ddot.*(m_2*r_2*cos(theta_1+theta_2));
+    + y_1_ddot.*(m_2*r_2*cos(theta_1+theta_2)) ...
+    + m_2*g*r_2*cos(theta_1+pi-theta_2);
 
 figure(9)
 ax1 = subplot(3,1,1);
