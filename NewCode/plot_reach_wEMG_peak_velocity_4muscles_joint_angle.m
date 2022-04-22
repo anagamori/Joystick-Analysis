@@ -135,7 +135,7 @@ for i = 29 %1:length(index_js_reach) %nTrial
         start_idx_joint = round(start_idx_js*Fs_joint/Fs_js);
         end_idx_joint = round(end_idx_js*Fs_joint/Fs_js);
         
-        start_offset = -0.07;
+        start_offset = -0.05;
         end_offset = 0.05;
         
         time_js = start_offset:1/Fs_js:end_offset;
