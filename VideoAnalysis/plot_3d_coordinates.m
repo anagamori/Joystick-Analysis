@@ -21,7 +21,16 @@ plot3(data(trial).elbow_mat(1,time_vec),data(trial).elbow_mat(3,time_vec),data(t
 plot3(data(trial).wrist_mat(1,time_vec),data(trial).wrist_mat(3,time_vec),data(trial).wrist_mat(2,time_vec),'o')
 plot3(data(trial).hand_mat(1,time_vec),data(trial).hand_mat(3,time_vec),data(trial).hand_mat(2,time_vec),'o')
 plot3(data(trial).joystick_mat(1,time_vec),data(trial).joystick_mat(3,time_vec),data(trial).joystick_mat(2,time_vec),'o')
-plot3([data(trial).shoulder_mat(1,time_vec(1)) data(trial).elbow_mat(1,time_vec(1))],[data(trial).shoulder_mat(3,time_vec(1)) data(trial).elbow_mat(3,time_vec(1))],[data(trial).shoulder_mat(3,time_vec(1)) data(trial).elbow_mat(3,time_vec(1))])
 xlabel('Anterior-posterior (mm)')
 ylabel('Medial-lateral (mm)')
 zlabel('Superior-inferior (mm)')
+
+for i = 1:length(time_vec)
+   plot3([data(trial).shoulder_mat(1,time_vec(i)) data(trial).elbow_mat(1,time_vec(i))],...
+       [data(trial).shoulder_mat(3,time_vec(i)) data(trial).elbow_mat(3,time_vec(i))],...
+       [data(trial).shoulder_mat(2,time_vec(i)) data(trial).elbow_mat(2,time_vec(i))],'color','k','LineWidth',1)
+   plot3([data(trial).elbow_mat(1,time_vec(i)) data(trial).wrist_mat(1,time_vec(i))],...
+       [data(trial).elbow_mat(3,time_vec(i)) data(trial).wrist_mat(3,time_vec(i))],...
+       [data(trial).elbow_mat(2,time_vec(i)) data(trial).wrist_mat(2,time_vec(i))],'color','k','LineWidth',1)
+ 
+end
