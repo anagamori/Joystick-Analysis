@@ -18,7 +18,7 @@ clc
 data_folder = 'D:\JoystickExpts\data\';
 code_folder = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode';
 mouse_ID = 'AN06';
-data_ID = '032322';
+data_ID = '032922';
 
 data_name = 'data';
 cd([data_folder mouse_ID '\EMG\' data_ID])
@@ -30,6 +30,9 @@ load('flag_noise')
 cd(code_folder)
 
 Fs_EMG = 10000;
+
+[b,a] = butter(8,[300 1000]./(Fs_EMG/2),'bandpass');
+[b2,a2] = butter(8,50./(Fs_EMG/2),'low');
 
 lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
     'PassbandFrequency',700,'PassbandRipple',0.01, ...
@@ -92,108 +95,37 @@ trigger = round(BNC1.times*Fs_EMG);
 
 EMG_bi = biceps.values;
 EMG_tri = triceps.values;
-EMG_a_delt = a_delt.values;
-EMG_p_delt = p_delt.values;
+EMG_a_delt = p_delt.values;
+EMG_p_delt = a_delt.values;
 
-EMG_bi_filt = filtfilt(lpFilt,EMG_bi);
-EMG_tri_filt = filtfilt(lpFilt,EMG_tri);
-EMG_a_delt_filt = filtfilt(lpFilt,EMG_a_delt);
-EMG_p_delt_filt = filtfilt(lpFilt,EMG_p_delt);
-
-EMG_bi_filt = filtfilt(hpFilt,EMG_bi_filt);
-EMG_tri_filt = filtfilt(hpFilt,EMG_tri_filt);
-EMG_a_delt_filt = filtfilt(hpFilt,EMG_a_delt_filt);
-EMG_p_delt_filt = filtfilt(hpFilt,EMG_p_delt_filt);
-
-% EMG_bi_filt = filtfilt(bsFilt,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt,EMG_p_delt_filt);
+EMG_bi_filt = filtfilt(b,a,EMG_bi);
+EMG_tri_filt = filtfilt(b,a,EMG_tri);
+EMG_a_delt_filt = filtfilt(b,a,EMG_a_delt);
+EMG_p_delt_filt = filtfilt(b,a,EMG_p_delt);
 
 [pxx_bi,f] = pwelch(EMG_bi_filt,[],[],0:0.5:5000,Fs_EMG,'power');
 [pxx_tri,~] = pwelch(EMG_tri_filt,[],[],0:0.5:5000,Fs_EMG,'power');
 [pxx_a_delt,~] = pwelch(EMG_a_delt_filt,[],[],0:0.5:5000,Fs_EMG,'power');
 [pxx_p_delt,~] = pwelch(EMG_p_delt_filt,[],[],0:0.5:5000,Fs_EMG,'power');
 
-%
-% EMG_bi_filt = filtfilt(bsFilt2,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt2,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt2,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt2,EMG_p_delt_filt);
-%
-% EMG_bi_filt = filtfilt(bsFilt3,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt3,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt3,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt3,EMG_p_delt_filt);
-%
-% EMG_bi_filt = filtfilt(bsFilt4,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt4,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt4,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt4,EMG_p_delt_filt);
-%
-% EMG_bi_filt = filtfilt(bsFilt5,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt5,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt5,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt5,EMG_p_delt_filt);
-%
-% EMG_bi_filt = filtfilt(bsFilt6,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt6,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt6,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt6,EMG_p_delt_filt);
-%
-% EMG_bi_filt = filtfilt(bsFilt7,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt7,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt7,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt7,EMG_p_delt_filt);
-%
-% EMG_bi_filt = filtfilt(bsFilt8,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt8,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt8,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt8,EMG_p_delt_filt);
-%
-% EMG_bi_filt = filtfilt(bsFilt9,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt9,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt9,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt9,EMG_p_delt_filt);
-%
-% EMG_bi_filt = filtfilt(bsFilt10,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt10,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt10,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt10,EMG_p_delt_filt);
-%
-% EMG_bi_filt = filtfilt(bsFilt11,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt11,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt11,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt11,EMG_p_delt_filt);
-%
-% EMG_bi_filt = filtfilt(bsFilt12,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt12,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt12,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt12,EMG_p_delt_filt);
-%
-% EMG_bi_filt = filtfilt(bsFilt13,EMG_bi_filt);
-% EMG_tri_filt = filtfilt(bsFilt13,EMG_tri_filt);
-% EMG_a_delt_filt = filtfilt(bsFilt13,EMG_a_delt_filt);
-% EMG_p_delt_filt = filtfilt(bsFilt13,EMG_p_delt_filt);
-
 cutoff = length(EMG_bi);
 time = 1:cutoff;
 time = time./Fs_EMG;
 
 %EMG_bi_filt = EMG_bi_filt(1:length(EMG_tri))-EMG_tri_filt;
-EMG_bi_rect = (EMG_bi_filt).^2;
-EMG_tri_rect = (EMG_tri_filt).^2;
-EMG_a_delt_rect = (EMG_a_delt_filt).^2;
-EMG_p_delt_rect = (EMG_p_delt_filt).^2;
+EMG_bi_rect = abs(EMG_bi_filt);
+EMG_tri_rect = abs(EMG_tri_filt);
+EMG_a_delt_rect = abs(EMG_a_delt_filt);
+EMG_p_delt_rect = abs(EMG_p_delt_filt);
 % EMG_bi_rect = abs(EMG_bi_filt);
 % EMG_tri_rect = abs(EMG_tri_filt);
 % EMG_a_delt_rect = abs(EMG_a_delt_filt);
 % EMG_p_delt_rect = abs(EMG_p_delt_filt);
 
-EMG_bi_smooth = filtfilt(lpFilt2,EMG_bi_rect); %-baseline_mean(1))./baseline_sd(1);
-EMG_tri_smooth = filtfilt(lpFilt2,EMG_tri_rect); %-baseline_mean(2))./baseline_sd(2);
-EMG_a_delt_smooth = filtfilt(lpFilt2,EMG_a_delt_rect); %-baseline_mean(1))./baseline_sd(1);
-EMG_p_delt_smooth = filtfilt(lpFilt2,EMG_p_delt_rect);
+EMG_bi_smooth = filtfilt(b2,a2,EMG_bi_rect); %-baseline_mean(1))./baseline_sd(1);
+EMG_tri_smooth = filtfilt(b2,a2,EMG_tri_rect); %-baseline_mean(2))./baseline_sd(2);
+EMG_a_delt_smooth = filtfilt(b2,a2,EMG_a_delt_rect); %-baseline_mean(1))./baseline_sd(1);
+EMG_p_delt_smooth = filtfilt(b2,a2,EMG_p_delt_rect);
 % EMG_bi_smooth = (filtfilt(lpFilt2,EMG_bi_rect)-baseline_mean(1))./baseline_sd(1);
 % EMG_tri_smooth = (filtfilt(lpFilt2,EMG_tri_rect)-baseline_mean(2))./baseline_sd(2);
 
@@ -270,8 +202,8 @@ str = input('Procede?','s');
 
 if strcmp(str,'y')
     
-    for i = 18:nTrial
-        
+    for i = 1:nTrial
+        i
         
         if i > 1
             if trigger(i) - trigger(i-1) > trialDuration
@@ -295,11 +227,20 @@ if strcmp(str,'y')
                 plot(temp_p_delt)
                 ylabel('PD')
                 
-                [x,y] = ginput(8);
-                baseline_mean = [mean(temp_bi(round(x(1)):round(x(2)))) mean(temp_tri(round(x(3)):round(x(4)))) ...
-                    mean(temp_a_delt(round(x(5)):round(x(6)))) mean(temp_p_delt(round(x(7)):round(x(8))))];
-                baseline_sd = [std(temp_bi(round(x(1)):round(x(2)))) std(temp_tri(round(x(3)):round(x(4)))) ...
-                    std(temp_a_delt(round(x(5)):round(x(6)))) std(temp_p_delt(round(x(7)):round(x(8))))];
+                str = input('Is noise level acceptable','s');        
+                if strcmp(str,'y')
+                    flag_noise(i) = 1;
+                    [x,y] = ginput(8);
+                    baseline_mean = [mean(temp_bi(round(x(1)):round(x(2)))) mean(temp_tri(round(x(3)):round(x(4)))) ...
+                        mean(temp_a_delt(round(x(5)):round(x(6)))) mean(temp_p_delt(round(x(7)):round(x(8))))];
+                    baseline_sd = [std(temp_bi(round(x(1)):round(x(2)))) std(temp_tri(round(x(3)):round(x(4)))) ...
+                        std(temp_a_delt(round(x(5)):round(x(6)))) std(temp_p_delt(round(x(7)):round(x(8))))];
+                else
+                    flag_noise(i) = 0;
+                    baseline_mean = zeros(1,4);
+                    baseline_sd = ones(1,4);
+                end
+                
                 
                 EMG_bi_zscore = (EMG_bi_smooth-baseline_mean(1))./baseline_sd(1);
                 EMG_tri_zscore = (EMG_tri_smooth-baseline_mean(2))./baseline_sd(2);
@@ -348,11 +289,20 @@ if strcmp(str,'y')
                 plot(temp_p_delt)
                 ylabel('PD')
                 
-                [x,y] = ginput(8);
-                baseline_mean = [mean(temp_bi(round(x(1)):round(x(2)))) mean(temp_tri(round(x(3)):round(x(4)))) ...
-                    mean(temp_a_delt(round(x(5)):round(x(6)))) mean(temp_p_delt(round(x(7)):round(x(8))))];
-                baseline_sd = [std(temp_bi(round(x(1)):round(x(2)))) std(temp_tri(round(x(3)):round(x(4)))) ...
-                    std(temp_a_delt(round(x(5)):round(x(6)))) std(temp_p_delt(round(x(7)):round(x(8))))];
+                str = input('Is noise level acceptable','s');        
+                if strcmp(str,'y')
+                    flag_noise(i) = 1;
+                    [x,y] = ginput(8);
+                    baseline_mean = [mean(temp_bi(round(x(1)):round(x(2)))) mean(temp_tri(round(x(3)):round(x(4)))) ...
+                        mean(temp_a_delt(round(x(5)):round(x(6)))) mean(temp_p_delt(round(x(7)):round(x(8))))];
+                    baseline_sd = [std(temp_bi(round(x(1)):round(x(2)))) std(temp_tri(round(x(3)):round(x(4)))) ...
+                        std(temp_a_delt(round(x(5)):round(x(6)))) std(temp_p_delt(round(x(7)):round(x(8))))];
+                else
+                    flag_noise(i) = 0;
+                    baseline_mean = zeros(1,4);
+                    baseline_sd = ones(1,4);
+                end
+                
                 
                 EMG_bi_zscore = (EMG_bi_smooth-baseline_mean(1))./baseline_sd(1);
                 EMG_tri_zscore = (EMG_tri_smooth-baseline_mean(2))./baseline_sd(2);
@@ -395,18 +345,25 @@ if strcmp(str,'y')
             plot(temp_p_delt)
             ylabel('PD')
             
-            [x,y] = ginput(8);
-            baseline_mean = [mean(temp_bi(round(x(1)):round(x(2)))) mean(temp_tri(round(x(3)):round(x(4)))) ...
-                mean(temp_a_delt(round(x(5)):round(x(6)))) mean(temp_p_delt(round(x(7)):round(x(8))))];
-            baseline_sd = [std(temp_bi(round(x(1)):round(x(2)))) std(temp_tri(round(x(3)):round(x(4)))) ...
-                std(temp_a_delt(round(x(5)):round(x(6)))) std(temp_p_delt(round(x(7)):round(x(8))))];
+            str = input('Is noise level acceptable','s');        
+            if strcmp(str,'y')
+                flag_noise(i) = 1;
+                [x,y] = ginput(8);
+                baseline_mean = [mean(temp_bi(round(x(1)):round(x(2)))) mean(temp_tri(round(x(3)):round(x(4)))) ...
+                    mean(temp_a_delt(round(x(5)):round(x(6)))) mean(temp_p_delt(round(x(7)):round(x(8))))];
+                baseline_sd = [std(temp_bi(round(x(1)):round(x(2)))) std(temp_tri(round(x(3)):round(x(4)))) ...
+                    std(temp_a_delt(round(x(5)):round(x(6)))) std(temp_p_delt(round(x(7)):round(x(8))))];
+            else
+                flag_noise(i) = 0;
+                baseline_mean = zeros(1,4);
+                baseline_sd = ones(1,4);
+            end   
             
             EMG_bi_zscore = (EMG_bi_smooth-baseline_mean(1))./baseline_sd(1);
-            EMG_tri_zscore = (EMG_tri_smooth-baseline_mean(2))./baseline_sd(2);
-            EMG_a_delt_zscore = (EMG_a_delt_smooth-baseline_mean(3))./baseline_sd(3);
-            EMG_p_delt_zscore = (EMG_p_delt_smooth-baseline_mean(4))./baseline_sd(4);
-            
-            
+                EMG_tri_zscore = (EMG_tri_smooth-baseline_mean(2))./baseline_sd(2);
+                EMG_a_delt_zscore = (EMG_a_delt_smooth-baseline_mean(3))./baseline_sd(3);
+                EMG_p_delt_zscore = (EMG_p_delt_smooth-baseline_mean(4))./baseline_sd(4);
+                
             EMG_struct(i).biceps_raw = EMG_bi_filt(index:index+trialDuration-1);
             EMG_struct(i).triceps_raw = EMG_tri_filt(index:index+trialDuration-1);
             EMG_struct(i).a_delt_raw = EMG_a_delt_filt(index:index+trialDuration-1);
@@ -431,13 +388,7 @@ if strcmp(str,'y')
         
         
         % optional if you suspect any change in noise level throughout recording session
-        str = input('Is noise level acceptable','s');
         
-        if strcmp(str,'y')
-            flag_noise(i) = 1;
-        else
-            flag_noise(i) = 0;
-        end
         close all
         
     end

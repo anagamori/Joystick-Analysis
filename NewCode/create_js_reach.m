@@ -30,9 +30,10 @@ Fs = 1000;
 lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
     'PassbandFrequency',200,'PassbandRipple',0.01, ...
     'SampleRate',Fs);
+[b,a] = butter(10,30/(Fs/2),'low');
 
 lpFilt2 = designfilt('lowpassiir','FilterOrder',8, ...
-    'PassbandFrequency',20,'PassbandRipple',0.01, ...
+    'PassbandFrequency',50,'PassbandRipple',0.01, ...
     'SampleRate',Fs);
 
 index_reward = [];
@@ -84,10 +85,10 @@ for j = 1:length(index_reward) %1:50 %3:32
     n = index_reward(j);
     
     % Preprocessing of x- and y-trajectory data
-    traj_x = filtfilt(lpFilt,jstruct(n).traj_x/100*6.35);
+    traj_x = filtfilt(b,a,jstruct(n).traj_x/100*6.35);
     vel_x = gradient(traj_x)*Fs; %[0 diff(traj_x)*Fs];
     acc_x = gradient(vel_x)*Fs; %[0 diff(vel_x)*Fs];
-    traj_y = filtfilt(lpFilt,jstruct(n).traj_y/100*6.35);
+    traj_y = filtfilt(b,a,jstruct(n).traj_y/100*6.35);
     vel_y = gradient(traj_y)*Fs;
     acc_y = gradient(vel_x)*Fs;
     

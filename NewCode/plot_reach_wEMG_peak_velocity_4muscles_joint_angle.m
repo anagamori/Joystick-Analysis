@@ -115,7 +115,7 @@ r_p_delt_Gamma_2_all = [];
 index_js_reach = 1:length(js_reach)-2;
 index_EMG = 1:length(EMG_struct);
 
-for i = 29 %1:length(index_js_reach) %nTrial
+for i = 19 %1:length(index_js_reach) %nTrial
     j = index_js_reach(i);
     k = index_EMG(i);
     %if isempty(js_reach(i).reach_flag)
@@ -250,25 +250,18 @@ for i = 29 %1:length(index_js_reach) %nTrial
             
             mag_vel_all = [mag_vel_all; js_reach(j).mag_vel_2(analysis_window_js)];
             
+            shift = 5*Fs_EMG/Fs_js;
             EMG_biceps_temp= abs(EMG_struct(k).biceps_raw);
+            EMG_biceps_temp = EMG_biceps_temp([shift:end,1:shift-1]);
             EMG_biceps = conv(EMG_biceps_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
             EMG_biceps = EMG_biceps(analysis_window_EMG);
             EMG_biceps_ds = downsample(EMG_biceps,10);
         
             EMG_triceps_temp= abs(EMG_struct(k).triceps_raw);
+            EMG_triceps_temp = EMG_triceps_temp([shift:end,1:shift-1]);
             EMG_triceps = conv(EMG_triceps_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
             EMG_triceps = EMG_triceps(analysis_window_EMG);
             EMG_triceps_ds = downsample(EMG_triceps,10);
-                        
-            EMG_a_delt_temp= abs(EMG_struct(k).a_delt_raw);
-            EMG_a_delt = conv(EMG_a_delt_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
-            EMG_a_delt = EMG_a_delt(analysis_window_EMG);
-            EMG_a_delt_ds = downsample(EMG_a_delt,10);
-            
-            EMG_p_delt_temp= abs(EMG_struct(k).p_delt_raw);
-            EMG_p_delt = conv(EMG_p_delt_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
-            EMG_p_delt = EMG_p_delt(analysis_window_EMG);
-            EMG_p_delt_ds = downsample(EMG_p_delt,10);
             
                   
             [r_bi_tri,lags] = xcorr(EMG_biceps-mean(EMG_biceps),EMG_triceps-mean(EMG_triceps),window_size*Fs_EMG/Fs_js,'coeff');
