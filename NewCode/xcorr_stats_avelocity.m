@@ -66,7 +66,7 @@ time_joint = start_offset:1/Fs_joint:end_offset;
 time_joint = time_joint*1000;
 window_size = length(time_js);
 
-nIteration = 100;
+nIteration = 20;
 nTrial = size(js_pos_all,1);
 combinations = nchoosek(1:nTrial,2);
 
@@ -83,10 +83,12 @@ s = RandStream('mlfg6331_64');
 for i = 1:nIteration
     idx_sample = datasample(s,1:nTrial,5,'Replace',true);
     
-    theta_dot_1 = mean(gradient(theta_1_all(idx_sample,:)));
-    theta_dot_2 = mean(gradient(theta_2_all(idx_sample,:)));
-    EMG_biceps = mean(EMG_biceps_ds_all(idx_sample,:));
-    EMG_triceps = mean(EMG_triceps_ds_all(idx_sample,:));
+    
+    theta_dot_1 = mean(gradient(theta_1_all(idx_sample,:))*Fs_js);
+    theta_dot_2 = mean(gradient(theta_2_all(idx_sample,:))*Fs_js);
+    theta_dot_bi = mean(gradient(theta_2_all(idx_sample,:))*Fs_js+gradient(theta_1_all(idx_sample,:))*Fs_js);
+    EMG_biceps = mean(gradient(theta_1_all(idx_sample,:))*Fs_js); %mean(EMG_biceps_ds_all(idx_sample,:));
+    EMG_triceps = mean(EMG_triceps_ds_all(idx_sample,:)); %zscore(mean(EMG_triceps_ds_all(idx_sample,:)))-zscore(mean(EMG_biceps_ds_all(idx_sample,:)));
     EMG_a_delt = mean(EMG_a_delt_ds_all(idx_sample,:));
     EMG_p_delt = mean(EMG_p_delt_ds_all(idx_sample,:));
     
@@ -191,13 +193,14 @@ se_p_delt_rand_2 = std(r_p_delt_theta_dot_2_rand_all,[],1)./(sqrt(size(r_p_delt_
 %% Plot muscle torque at shoulder 
 figure(1)
 subplot(3,1,1:2)
-patch([lags fliplr(lags)], [y_biceps_1(:)-se_biceps_1(:);  flipud(y_biceps_1(:)+se_biceps_1(:))],[45 49 66]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
+patch([lags fliplr(lags)], [y_biceps_1(:)-se_biceps_1(:);  flipud(y_biceps_1(:)+se_biceps_1(:))],[35 140 204]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
 hold on
 plot(lags,mean(r_biceps_theta_dot_1_all),'LineWidth',2,'color',[35 140 204]/255)
-patch([lags fliplr(lags)], [y_biceps_rand_1(:)-se_biceps_rand_1(:);  flipud(y_biceps_rand_1(:)+se_biceps_rand_1(:))],[0 0 0]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
-plot(lags,mean(r_biceps_theta_dot_1_rand_all),'LineWidth',2,'color',[0 0 0]/255)
+% patch([lags fliplr(lags)], [y_biceps_rand_1(:)-se_biceps_rand_1(:);  flipud(y_biceps_rand_1(:)+se_biceps_rand_1(:))],[0 0 0]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
+% plot(lags,mean(r_biceps_theta_dot_1_rand_all),'LineWidth',2,'color',[0 0 0]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')
+ylabel('Correlation')
 
 r_biceps_theta_dot_1_all_fz = atanh(r_biceps_theta_dot_1_all);
 r_biceps_theta_dot_1_rand_all_fz = atanh(r_biceps_theta_dot_1_rand_all);
@@ -205,7 +208,7 @@ mean_r_biceps_theta_dot_1_rand_all_fz= mean(r_biceps_theta_dot_1_rand_all_fz);
 sd_r_biceps_theta_dot_1_rand_all_fz = std(r_biceps_theta_dot_1_rand_all_fz,[],1);
 r_biceps_theta_dot_1_all_z = (r_biceps_theta_dot_1_all_fz- mean_r_biceps_theta_dot_1_rand_all_fz)./sd_r_biceps_theta_dot_1_rand_all_fz;
 for k = 1:size(r_biceps_theta_dot_1,2)
-    [~,p(k)] = ttest2(r_biceps_theta_dot_1_all_fz(:,k),r_biceps_theta_dot_1_rand_all_fz(:,k),'Vartype','unequal');
+    [~,p(k)] = ttest(r_biceps_theta_dot_1_all_fz(:,k));
 end
 p = p*size(r_biceps_theta_dot_1,2);
 p(p>0.1) = 0.1;
@@ -214,6 +217,8 @@ subplot(3,1,3)
 plot(lags,p,'color','k','LineWidth',1)
 hold on 
 yline(0.05,'--','color','k','LineWidth',1)
+ylabel({'Corrected','p-value'})
+xlabel('Lags (ms)')
 set(gca,'TickDir','out')
 set(gca,'box','off')
 
@@ -307,13 +312,14 @@ set(gca,'box','off')
 %% Plot muscle torque at slbow 
 figure(5)
 subplot(3,1,1:2)
-patch([lags fliplr(lags)], [y_biceps_2(:)-se_biceps_2(:);  flipud(y_biceps_2(:)+se_biceps_2(:))],[45 49 66]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
+patch([lags fliplr(lags)], [y_biceps_2(:)-se_biceps_2(:);  flipud(y_biceps_2(:)+se_biceps_2(:))],[35 140 204]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
 hold on
 plot(lags,mean(r_biceps_theta_dot_2_all),'LineWidth',2,'color',[35 140 204]/255)
-patch([lags fliplr(lags)], [y_biceps_rand_2(:)-se_biceps_rand_2(:);  flipud(y_biceps_rand_2(:)+se_biceps_rand_2(:))],[0 0 0]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
-plot(lags,mean(r_biceps_theta_dot_2_rand_all),'LineWidth',2,'color',[0 0 0]/255)
+% patch([lags fliplr(lags)], [y_biceps_rand_2(:)-se_biceps_rand_2(:);  flipud(y_biceps_rand_2(:)+se_biceps_rand_2(:))],[0 0 0]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
+% plot(lags,mean(r_biceps_theta_dot_2_rand_all),'LineWidth',2,'color',[0 0 0]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')
+ylabel('Correlation')
 
 r_biceps_theta_dot_2_all_fz = atanh(r_biceps_theta_dot_2_all);
 r_biceps_theta_dot_2_rand_all_fz = atanh(r_biceps_theta_dot_2_rand_all);
@@ -321,7 +327,7 @@ mean_r_biceps_theta_dot_2_rand_all_fz= mean(r_biceps_theta_dot_2_rand_all_fz);
 sd_r_biceps_theta_dot_2_rand_all_fz = std(r_biceps_theta_dot_2_rand_all_fz,[],1);
 r_biceps_theta_dot_2_all_z = (r_biceps_theta_dot_2_all_fz- mean_r_biceps_theta_dot_2_rand_all_fz)./sd_r_biceps_theta_dot_2_rand_all_fz;
 for k = 1:size(r_biceps_theta_dot_2,2)
-    [~,p(k)] = ttest2(r_biceps_theta_dot_2_all_fz(:,k),r_biceps_theta_dot_2_rand_all_fz(:,k),'Vartype','unequal');
+    [~,p(k)] = ttest(r_biceps_theta_dot_2_all_fz(:,k)); %,r_biceps_theta_dot_2_rand_all_fz(:,k),'Vartype','unequal');
 end
 p = p*size(r_biceps_theta_dot_2,2);
 p(p>0.1) = 0.1;
@@ -330,17 +336,19 @@ subplot(3,1,3)
 plot(lags,p,'color','k','LineWidth',1)
 hold on 
 yline(0.05,'--','color','k','LineWidth',1)
+ylabel({'Corrected','p-value'})
+xlabel('Lags (ms)')
 set(gca,'TickDir','out')
 set(gca,'box','off')
 
 % Muscle toruqe at elbow and triceps
 figure(6)
 subplot(3,1,1:2)
-patch([lags fliplr(lags)], [y_triceps_2(:)-se_triceps_2(:);  flipud(y_triceps_2(:)+se_triceps_2(:))],[45 49 66]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
+patch([lags fliplr(lags)], [y_triceps_2(:)-se_triceps_2(:);  flipud(y_triceps_2(:)+se_triceps_2(:))],[204 45 52]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
 hold on
 plot(lags,mean(r_triceps_theta_dot_2_all),'LineWidth',2,'color',[204 45 52]/255)
-patch([lags fliplr(lags)], [y_triceps_rand_2(:)-se_triceps_rand_2(:);  flipud(y_triceps_rand_2(:)+se_triceps_rand_2(:))],[0 0 0]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
-plot(lags,mean(r_triceps_theta_dot_2_rand_all),'LineWidth',2,'color',[0 0 0]/255)
+% patch([lags fliplr(lags)], [y_triceps_rand_2(:)-se_triceps_rand_2(:);  flipud(y_triceps_rand_2(:)+se_triceps_rand_2(:))],[0 0 0]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
+% plot(lags,mean(r_triceps_theta_dot_2_rand_all),'LineWidth',2,'color',[0 0 0]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')
 
@@ -350,7 +358,7 @@ mean_r_triceps_theta_dot_2_rand_all_fz= mean(r_triceps_theta_dot_2_rand_all_fz);
 sd_r_triceps_theta_dot_2_rand_all_fz = std(r_triceps_theta_dot_2_rand_all_fz,[],1);
 r_triceps_theta_dot_2_all_z = (r_triceps_theta_dot_2_all_fz- mean_r_triceps_theta_dot_2_rand_all_fz)./sd_r_triceps_theta_dot_2_rand_all_fz;
 for k = 1:size(r_triceps_theta_dot_2,2)
-    [~,p(k)] = ttest2(r_triceps_theta_dot_2_all_fz(:,k),r_triceps_theta_dot_2_rand_all_fz(:,k),'Vartype','unequal');
+    [~,p(k)] = ttest(r_triceps_theta_dot_2_all_fz(:,k)); %,r_triceps_theta_dot_2_rand_all_fz(:,k),'Vartype','unequal');
 end
 p = p*size(r_triceps_theta_dot_2,2);
 p(p>0.1) = 0.1;

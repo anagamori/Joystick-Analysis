@@ -11,7 +11,7 @@ clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_4_AN06';
-data_ID = '033022_63_79_020_10000_020_016_030_150_030_150_000';
+data_ID = '040122_63_79_020_10000_020_016_030_150_030_150_000';
 condition_array = strsplit(data_ID,'_');
 
 pltOpt = 1;
@@ -111,7 +111,7 @@ for i = 1:nTrial
         %% Reach end
         % the first coincident velocity and RoC local minima after reward
         idx_min_vel_end = loc_min_vel(loc_min_vel>target_offset);
-        end_time = idx_min_vel_end(1);
+        end_time = loc_min_vel_reward;%idx_min_vel_end(1);
         
         %     %% Plot data
         if pltOpt == 1

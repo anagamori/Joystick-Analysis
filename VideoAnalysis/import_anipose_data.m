@@ -42,7 +42,7 @@ for i = 1:length(files_pose_3d)
     shoulder_y = filtfilt(b,a,interp(temp.Shoulder_y,5));
     shoulder_z = filtfilt(b,a,interp(temp.Shoulder_z,5));
     data(trialN).shoulder_score = temp.Shoulder_score;
-    data(trialN).shoulder_mat = [shoulder_x -shoulder_y shoulder_z]';
+    data(trialN).shoulder_mat = [shoulder_x -shoulder_y -shoulder_z]';
     data(trialN).x = [shoulder_x gradient(shoulder_x)*Fs gradient(gradient(shoulder_x)*Fs)*Fs]';
     data(trialN).y = [shoulder_y gradient(shoulder_y)*Fs gradient(gradient(shoulder_y)*Fs)*Fs]';
     x_1 = shoulder_x;
@@ -56,7 +56,7 @@ for i = 1:length(files_pose_3d)
     elbow_y = filtfilt(b,a,interp(temp.Elbow_y,5));
     elbow_z = filtfilt(b,a,interp(temp.Elbow_z,5));
     data(trialN).elbow_score = temp.Elbow_score;
-    data(trialN).elbow_mat = [elbow_x -elbow_y elbow_z]';
+    data(trialN).elbow_mat = [elbow_x -elbow_y -elbow_z]';
     if ~any(isnan(interp(temp.Wrist_x,5)))
         wrist_x = filtfilt(b,a,interp(temp.Wrist_x,5));
         wrist_y = filtfilt(b,a,interp(temp.Wrist_y,5));
@@ -74,7 +74,7 @@ for i = 1:length(files_pose_3d)
         wrist_z = filtfilt(b,a,temp_z);
     end
     data(trialN).wrist_score = temp.Wrist_score;
-    data(trialN).wrist_mat = [wrist_x -wrist_y wrist_z]';
+    data(trialN).wrist_mat = [wrist_x -wrist_y -wrist_z]';
     if ~any(isnan(interp(temp.Hand_x,5)))
         hand_x = filtfilt(b,a,interp(temp.Hand_x,5));
         hand_y = filtfilt(b,a,interp(temp.Hand_y,5));
@@ -92,7 +92,7 @@ for i = 1:length(files_pose_3d)
         hand_z = filtfilt(b,a,temp_z);
     end   
     data(trialN).hand_score = temp.Hand_score;
-    data(trialN).hand_mat = [hand_x -hand_y hand_z]';
+    data(trialN).hand_mat = [hand_x -hand_y -hand_z]';
     if ~any(isnan(interp(temp.Joystick_x,5)))
         joystick_x = filtfilt(b,a,interp(temp.Joystick_x,5));
         joystick_y = filtfilt(b,a,interp(temp.Joystick_y,5));
@@ -110,20 +110,24 @@ for i = 1:length(files_pose_3d)
         joystick_z = filtfilt(b,a,temp_z);
     end
     data(trialN).joystick_score = temp.Joystick_score;
-    data(trialN).joystick_mat = [joystick_x -joystick_y joystick_z]';
+    data(trialN).joystick_mat = [joystick_x -joystick_y -joystick_z]';
     
-    u = [1;0;0]+data(trialN).shoulder_mat - data(trialN).shoulder_mat;
+    u = [0;0;1]+data(trialN).shoulder_mat - data(trialN).shoulder_mat;
     v = data(trialN).elbow_mat - data(trialN).shoulder_mat;
     n = cross(u,v);
     dir_1 = dot(u,cross(v,n));
     v2 = data(trialN).shoulder_mat - data(trialN).elbow_mat;
     w = data(trialN).wrist_mat - data(trialN).elbow_mat;
     n2 = zeros(3,length(u));
-    n2(2,:) = 1;
+    n2(2,:) = 1;  
     u2 = w-dot(w,n2).*n2;
+    %u2 = -v-dot(-v,n2).*n2;
+    %ry = [cos(pi/2) 0 sin(pi/2); 0 1 0; -sin(pi/2) 0 cos(pi/2)];
+    %u2 = ry*u2;
+    
     %u2 = u2;% - data(trialN).shoulder_mat;
    
-    theta_1 = 2*pi-acos(dot(u,v)./(vecnorm(u).*vecnorm(v)));
+    theta_1 = 2*pi-acos(dot(u2,v)./(vecnorm(u2).*vecnorm(v)));
     theta_1 = theta_1';
     theta_1_dot = gradient(theta_1)*Fs;
     theta_1_ddot = gradient(theta_1_dot)*Fs;
@@ -142,7 +146,7 @@ for i = 1:length(files_pose_3d)
     r_2 = l_2/2;
     
     g = 9.81;
-    m_1 = 0.00022154;
+    m_1 = 0.00018;
     m_2 = 0.00020154;
 
     I_1 = 1/12*l_1^2*m_1;

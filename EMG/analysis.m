@@ -1,4 +1,4 @@
-close all
+%close all
 
 [file, path, filterindex] = uigetfile('*.rhd', 'Select an RHD2000 Data File', 'MultiSelect', 'off');
 [t_amplifier, amplifier_data, board_dig_in_data, frequency_parameters] = read_Intan_RHD2000_file_nongui(file, path);
@@ -10,11 +10,11 @@ lpFilt = designfilt('lowpassiir','FilterOrder',4, ...
     'SampleRate',Fs);
 
 hpFilt = designfilt('highpassiir','FilterOrder',4, ...
-    'PassbandFrequency',350,'PassbandRipple',0.2, ...
+    'PassbandFrequency',700,'PassbandRipple',0.2, ...
     'SampleRate',Fs);
 
 %%
-[b,a] = butter(4,[350 7000]./(Fs/2),'bandpass');
+[b,a] = butter(8,[350 7000]./(Fs/2),'bandpass');
 data = amplifier_data;
 data_filt = zeros(size(data));
 data_pxx = zeros(size(data,1),length(f));
@@ -34,6 +34,7 @@ end
 %ref_signal_D = median(data_filt(17:24,:));
 
 
+
 %%
 idx = 1;
 idx2 = 1;
@@ -45,13 +46,13 @@ for i = 1:size(data,1)
         figure(1)
         ax{i} = subplot(8,1,idx);
         plot(time,data_filt(i,:),'color','k','LineWidth',1)
-     
-        ylabel(['Channel ' num2str(i)] )
+        hold on 
+        ylabel(['Channel ' num2str(i-1)] )
         
         figure(3)
         ax{i+16} = subplot(8,1,idx);
         plot(f,data_pxx(i,:),'color','k','LineWidth',1)
-        ylabel(['Channel ' num2str(i)] )
+        ylabel(['Channel ' num2str(i-1)] )
         
            idx = idx+1;
                
@@ -59,13 +60,14 @@ for i = 1:size(data,1)
         figure(2)
         ax{i} = subplot(8,1,idx2);
         plot(time,data_filt(i,:),'color','k','LineWidth',1)
-       
-        ylabel(['Channel ' num2str(i)] )
+        hold on
+
+        ylabel(['Channel ' num2str(i-1)] )
         
         figure(4)
         ax{i+16} = subplot(8,1,idx2);
         plot(f,data_pxx(i,:),'color','k','LineWidth',1)
-        ylabel(['Channel ' num2str(i)] )
+        ylabel(['Channel ' num2str(i-1)] )
                
         
          idx2 = idx2+1;

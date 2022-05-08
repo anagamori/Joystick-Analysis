@@ -90,7 +90,7 @@ for j = 1:length(index_reward) %1:50 %3:32
     acc_x = gradient(vel_x)*Fs; %[0 diff(vel_x)*Fs];
     traj_y = filtfilt(b,a,jstruct(n).traj_y/100*6.35);
     vel_y = gradient(traj_y)*Fs;
-    acc_y = gradient(vel_x)*Fs;
+    acc_y = gradient(vel_y)*Fs;
     
     traj_x_2 = filtfilt(lpFilt2,jstruct(n).traj_x/100*6.35);
     vel_x_2 = gradient(traj_x_2)*Fs;

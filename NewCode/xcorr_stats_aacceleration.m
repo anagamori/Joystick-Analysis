@@ -85,7 +85,7 @@ for i = 1:nIteration
     
     theta_ddot_1 = mean(gradient(gradient(theta_1_all(idx_sample,:))));
     theta_ddot_2 = mean(gradient(gradient(theta_2_all(idx_sample,:))));
-    EMG_biceps = mean(EMG_biceps_ds_all(idx_sample,:));
+    EMG_biceps = theta_ddot_1; %mean(EMG_biceps_ds_all(idx_sample,:));
     EMG_triceps = mean(EMG_triceps_ds_all(idx_sample,:));
     EMG_a_delt = mean(EMG_a_delt_ds_all(idx_sample,:));
     EMG_p_delt = mean(EMG_p_delt_ds_all(idx_sample,:));
@@ -252,10 +252,11 @@ subplot(3,1,1:2)
 patch([lags fliplr(lags)], [y_a_delt_1(:)-se_a_delt_1(:);  flipud(y_a_delt_1(:)+se_a_delt_1(:))],[45 49 66]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
 hold on
 plot(lags,mean(r_a_delt_theta_ddot_1_all),'LineWidth',2,'color',[45 49 66]/255)
-patch([lags fliplr(lags)], [y_a_delt_rand_1(:)-se_a_delt_rand_1(:);  flipud(y_a_delt_rand_1(:)+se_a_delt_rand_1(:))],[0 0 0]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
-plot(lags,mean(r_a_delt_theta_ddot_1_rand_all),'LineWidth',2,'color',[0 0 0]/255)
+% patch([lags fliplr(lags)], [y_a_delt_rand_1(:)-se_a_delt_rand_1(:);  flipud(y_a_delt_rand_1(:)+se_a_delt_rand_1(:))],[0 0 0]/255, 'FaceAlpha',0.5, 'EdgeColor','none')
+% plot(lags,mean(r_a_delt_theta_ddot_1_rand_all),'LineWidth',2,'color',[0 0 0]/255)
 set(gca,'TickDir','out')
 set(gca,'box','off')
+ylabel('Correlation')
 
 r_a_delt_theta_ddot_1_all_fz = atanh(r_a_delt_theta_ddot_1_all);
 r_a_delt_theta_ddot_1_rand_all_fz = atanh(r_a_delt_theta_ddot_1_rand_all);
@@ -263,7 +264,7 @@ mean_r_a_delt_theta_ddot_1_rand_all_fz= mean(r_a_delt_theta_ddot_1_rand_all_fz);
 sd_r_a_delt_theta_ddot_1_rand_all_fz = std(r_a_delt_theta_ddot_1_rand_all_fz,[],1);
 r_a_delt_theta_ddot_1_all_z = (r_a_delt_theta_ddot_1_all_fz- mean_r_a_delt_theta_ddot_1_rand_all_fz)./sd_r_a_delt_theta_ddot_1_rand_all_fz;
 for k = 1:size(r_a_delt_theta_ddot_1,2)
-    [~,p(k)] = ttest2(r_a_delt_theta_ddot_1_all_fz(:,k),r_a_delt_theta_ddot_1_rand_all_fz(:,k),'Vartype','unequal');
+    [~,p(k)] = ttest(r_a_delt_theta_ddot_1_all_fz(:,k)); %,r_a_delt_theta_ddot_1_rand_all_fz(:,k),'Vartype','unequal');
 end
 p = p*size(r_a_delt_theta_ddot_1,2);
 p(p>0.1) = 0.1;
@@ -272,6 +273,8 @@ subplot(3,1,3)
 plot(lags,p,'color','k','LineWidth',1)
 hold on 
 yline(0.05,'--','color','k','LineWidth',1)
+ylabel({'Corrected','p-value'})
+xlabel('Lags (ms)')
 set(gca,'TickDir','out')
 set(gca,'box','off')
 

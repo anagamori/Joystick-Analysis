@@ -96,7 +96,7 @@ for i = 1:nIteration
     torque_1_muscle =torque_1_muscle_all(idx_sample,:);
     torque_2_muscle = torque_2_muscle_all(idx_sample,:);
     EMG_biceps = EMG_biceps_ds_all(idx_sample,:);
-    EMG_triceps = EMG_biceps_ds_all(idx_sample,:)-EMG_triceps_ds_all(idx_sample,:);
+    EMG_triceps = EMG_triceps_ds_all(idx_sample,:);
     EMG_a_delt = EMG_a_delt_ds_all(idx_sample,:);
     EMG_p_delt = EMG_p_delt_ds_all(idx_sample,:);
     
@@ -172,7 +172,7 @@ for i = 1:nIteration
     torque_1_muscle = torque_1_muscle_all(combinations(idx_sample,2),:);
     torque_2_muscle = torque_2_muscle_all(combinations(idx_sample,2),:);
     EMG_biceps = EMG_biceps_ds_all(combinations(idx_sample,1),:);
-    EMG_triceps = EMG_biceps_ds_all(combinations(idx_sample,1),:)-EMG_triceps_ds_all(combinations(idx_sample,1),:);
+    EMG_triceps = EMG_triceps_ds_all(combinations(idx_sample,1),:);
     EMG_a_delt = EMG_a_delt_ds_all(combinations(idx_sample,1),:);
     EMG_p_delt = EMG_p_delt_ds_all(combinations(idx_sample,1),:);
     

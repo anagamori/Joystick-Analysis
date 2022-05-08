@@ -51,8 +51,8 @@ load('EMG_a_delt_ds_all')
 load('EMG_p_delt_ds_all')
 cd(code_folder)
 
-start_offset = -0.008;
-end_offset = 0.1;
+start_offset = -0.01;
+end_offset = 0.12;
 
 Fs_js = 1000;
 Fs_EMG = 10000;
@@ -137,3 +137,47 @@ xlabel('Time (ms)')
 set(gca,'TickDir','out')
 set(gca,'box','off')
 linkaxes([ax1,ax2,ax3,ax4,ax5,ax6],'x')
+
+
+figure(6)
+ax1 = subplot(2,2,1);
+plot(time_js,mean_theta_1,'color',[10, 40, 75]/255,'LineWidth',1)
+% hold on 
+% plot(time_js,p2p*(rescale(theta_all(2,:))-mean(rescale(theta_all(2,:))))+mean_angle,'color',[255, 66, 66]/255,'LineWidth',1)
+% plot(time_js,p2p*1.1*(rescale(theta_all(3,:))-mean(rescale(theta_all(3,:))))+mean_angle,'color',[166, 145, 174]/255,'LineWidth',1)
+% yline(mean_angle,'--','color','k')
+% %legend('Angle','Velocity','Acceleration')
+title('Shoulder')
+set(gca,'TickDir','out')
+set(gca,'box','off')
+ax2 = subplot(2,2,3);
+yyaxis left
+plot(time_EMG,mean(EMG_a_delt_all),'color',[45 49 66]/255,'LineWidth',1)
+ylabel({'EMG','(z-score)'})
+yyaxis right
+plot(time_EMG,mean(EMG_p_delt_all),'color',[247 146 83]/255,'LineWidth',1)
+set(gca,'TickDir','out')
+set(gca,'box','off')
+mean_theta_2 = mean(theta_2_all);
+mean_angle = mean(mean_theta_2);
+p2p = max(mean_theta_2)-min(mean_theta_2);
+ax3 = subplot(2,2,2);
+plot(time_js,mean_theta_2,'color',[10, 40, 75]/255,'LineWidth',1)
+% hold on 
+% plot(time_js,p2p*(rescale(theta_all(5,:))-mean(rescale(theta_all(5,:))))+mean_angle,'color',[255, 66, 66]/255,'LineWidth',1)
+% plot(time_js,p2p*1.1*(rescale(theta_all(6,:))-mean(rescale(theta_all(6,:))))+mean_angle,'color',[166, 145, 174]/255,'LineWidth',1)
+% yline(mean_angle,'--','color','k')
+% legend('Angle','Velocity','Acceleration')
+title('Elbow')
+set(gca,'TickDir','out')
+set(gca,'box','off')
+ax4 = subplot(2,2,4);
+yyaxis left
+plot(time_EMG,mean(EMG_biceps_all),'color',[35 140 204]/255,'LineWidth',1)
+yyaxis right
+plot(time_EMG,mean(EMG_triceps_all),'color',[204 45 52]/255,'LineWidth',1)
+xlabel('Time (ms)')
+set(gca,'TickDir','out')
+set(gca,'box','off')
+linkaxes([ax1,ax2,ax3,ax4],'x')
+

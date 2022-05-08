@@ -54,8 +54,8 @@ lpFilt = designfilt('lowpassiir','FilterOrder',8, ...
     'PassbandFrequency',200,'PassbandRipple',0.01, ...
     'SampleRate',Fs_EMG);
 
-start_offset = -0.008;
-end_offset = 0.1;
+start_offset = -0.01;
+end_offset = 0.12;
 
 time_js = start_offset:1/Fs_js:end_offset;
 time_js = time_js*1000;
@@ -137,8 +137,9 @@ index_js_reach = 1:length(js_reach)-2;
 index_EMG = 1:length(EMG_struct);
 
 idx = 0;
-trialIdx = [18 19 20];
-for i = 1:28 %4:length(index_js_reach) %nTrial
+trialIdx = [18 19 20 23 24 25];
+for i = trialIdx %23:25 %length(index_js_reach) %nTrial
+  
     j = index_js_reach(i);
     k = index_EMG(i);
     %if isempty(js_reach(i).reach_flag)
@@ -161,6 +162,7 @@ for i = 1:28 %4:length(index_js_reach) %nTrial
 
         
         if flag_noise(k) == 1 && length(data(k).elbow_angle)>250 && straightness(j) > 0.8 
+           
             idx = idx+1;
             mag_vel = js_reach(j).mag_vel(start_idx_js:1*Fs_js);
             [~,loc_max_mag_vel] = max(mag_vel);
@@ -201,15 +203,20 @@ for i = 1:28 %4:length(index_js_reach) %nTrial
             
             
             shift = 5*Fs_EMG/Fs_js;
-            EMG_biceps_temp= abs(EMG_struct(k).biceps_raw);
-            EMG_biceps_temp = EMG_biceps_temp([shift:end,1:shift-1]);
-            EMG_biceps = conv(EMG_biceps_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
+%             EMG_biceps_temp= abs(EMG_struct(k).biceps_raw);
+%             EMG_biceps_temp = EMG_biceps_temp([shift:end,1:shift-1]);
+%             EMG_biceps = conv(EMG_biceps_temp,gausswin(0.001*Fs_EMG)./sum(gausswin(0.001*Fs_EMG)),'same');
+            EMG_biceps_temp = EMG_struct(k).biceps_zscore;
+            EMG_biceps = EMG_biceps_temp([shift:end,1:shift-1]);
+            %EMG_biceps = EMG_biceps(analysis_window_EMG);
             EMG_biceps = EMG_biceps(analysis_window_EMG);
             EMG_biceps_ds = downsample(EMG_biceps,10);
         
-            EMG_triceps_temp= abs(EMG_struct(k).triceps_raw);
-            EMG_triceps_temp = EMG_triceps_temp([shift:end,1:shift-1]);
-            EMG_triceps = conv(EMG_triceps_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
+%             EMG_triceps_temp= abs(EMG_struct(k).triceps_raw);
+%             EMG_triceps_temp = EMG_triceps_temp([shift:end,1:shift-1]);
+%             EMG_triceps = conv(EMG_triceps_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
+            EMG_triceps_temp = EMG_struct(k).triceps_zscore;
+            EMG_triceps = EMG_triceps_temp([shift:end,1:shift-1]);
             EMG_triceps = EMG_triceps(analysis_window_EMG);
             EMG_triceps_ds = downsample(EMG_triceps,10);
                         
@@ -221,9 +228,11 @@ for i = 1:28 %4:length(index_js_reach) %nTrial
             EMG_a_delt = EMG_a_delt(analysis_window_EMG);
             EMG_a_delt_ds = downsample(EMG_a_delt,10);
             
-            EMG_p_delt_temp= abs(EMG_struct(k).p_delt_raw);
-            EMG_p_delt_temp = EMG_p_delt_temp([shift:end,1:shift-1]);
-            EMG_p_delt = conv(EMG_p_delt_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
+%             EMG_p_delt_temp= abs(EMG_struct(k).p_delt_raw);
+%             EMG_p_delt_temp = EMG_p_delt_temp([shift:end,1:shift-1]);
+%             EMG_p_delt = conv(EMG_p_delt_temp,gausswin(0.02*Fs_EMG)./sum(gausswin(0.02*Fs_EMG)),'same');
+            EMG_p_delt_temp = EMG_struct(k).p_delt_zscore;
+            EMG_p_delt = EMG_p_delt_temp([shift:end,1:shift-1]);
             EMG_p_delt = EMG_p_delt(analysis_window_EMG);
             EMG_p_delt_ds = downsample(EMG_p_delt,10);
             
@@ -333,11 +342,11 @@ for i = 1:28 %4:length(index_js_reach) %nTrial
             axis equal
             
             k
-            prompt = 'Move to nex? y/n: ';
-            str = input(prompt,'s');
-            if strcmp(str,'n')
-                break
-            end
+%             prompt = 'Move to nex? y/n: ';
+%             str = input(prompt,'s');
+%             if strcmp(str,'n')
+%                 break
+%             end
         end
         
     end
@@ -411,6 +420,26 @@ plot(time_EMG,mean(EMG_p_delt_all),'LineWidth',2,'color','k')
 ylabel({'AD','(z-score)'})
 xlabel('Time (ms)')
 
+figure(4)
+ax1 = subplot(3,1,1);
+plot(time_js,mean(js_pos_all),'LineWidth',2,'color','k')
+yline(hold_threshold,'--','color','k','LineWidth',2)
+yline(outer_threshold,'--','color','k','LineWidth',2)
+yline(max_distance,'--','color','k','LineWidth',2)
+ylabel({'Position';'(mm)'})
+set(gca,'TickDir','out')
+set(gca,'box','off')
+ax2 = subplot(3,1,2);
+plot(time_joint,mean(theta_1_all),'LineWidth',2,'color','k')
+ylabel({'Shoulder','Angle (deg)'})
+set(gca,'TickDir','out')
+set(gca,'box','off')
+ax3 = subplot(3,1,3);
+plot(time_joint,mean(theta_2_all),'LineWidth',2,'color','k')
+ylabel({'Elbow','Angle (deg)'})
+set(gca,'TickDir','out')
+set(gca,'box','off')
+linkaxes([ax1 ax2 ax3],'x')
 
 figure(4)
 ax1 = subplot(7,1,1);
