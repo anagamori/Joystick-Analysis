@@ -6,9 +6,9 @@
 %--------------------------------------------------------------------------
 %%
 
-close all
-clear all
-clc
+% close all
+% clear all
+% clc
 
 data_folder = 'D:\JoystickExpts\data\';
 mouse_ID = 'Box_4_AN08'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
@@ -81,7 +81,7 @@ for i = 1:nTrial
     reach_thres_binary = zeros(1,length(jstruct(i).traj_x));
     reach_thres_binary(radial_pos>reach_threshold) = 1;
     reach_thres_diff = [0 diff(reach_thres_binary)];
-    reach_thres_onset = find(reach_thres_diff==1);
+    reach_thres_onset = find(reach_thres_diff==0.5);
     
     angle_binary = zeros(1,length(jstruct(i).traj_x));
     angle_binary(find(angle_js > angle_min & angle_js < angle_max)) = 1;

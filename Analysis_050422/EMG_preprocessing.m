@@ -29,7 +29,7 @@ for i = 1:size(file_names,1)
     data = amplifier_data;
     data_filt = zeros(size(data));
     
-    [b,a] = butter(8,[350 2000]/(Fs/2),'bandpass');
+    [b,a] = butter(8,[350 7000]/(Fs/2),'bandpass');
     
     for j = 1:size(data,1)
         data_filt(j,:) = filtfilt(b,a,data(j,:));

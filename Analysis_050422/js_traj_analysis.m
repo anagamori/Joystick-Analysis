@@ -43,7 +43,7 @@ Fs = 1000;
 
 [b,a] = butter(10,50/(Fs/2),'low');
 
-for i = 1:5 %:nTrial
+for i = 93
     x_filt = filtfilt(b,a,js_reach(i).x_traj);
     y_filt = filtfilt(b,a,js_reach(i).y_traj);   
     vel_x = gradient(x_filt)*Fs; 
