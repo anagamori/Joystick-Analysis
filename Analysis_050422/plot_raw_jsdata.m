@@ -81,7 +81,7 @@ for i = 1:nTrial
     reach_thres_binary = zeros(1,length(jstruct(i).traj_x));
     reach_thres_binary(radial_pos>reach_threshold) = 1;
     reach_thres_diff = [0 diff(reach_thres_binary)];
-    reach_thres_onset = find(reach_thres_diff==0.5);
+    reach_thres_onset = find(reach_thres_diff==1);
     
     angle_binary = zeros(1,length(jstruct(i).traj_x));
     angle_binary(find(angle_js > angle_min & angle_js < angle_max)) = 1;
