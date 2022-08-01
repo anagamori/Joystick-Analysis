@@ -2,9 +2,9 @@ close all
 clear all
 clc
 
-data_folder = 'D:\JoystickExpts\data\';
+data_folder = 'F:\JoystickExpts\data\';
 mouse_ID = 'Box_4_AN06'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
-data_ID = '032422_63_79_020_10000_020_016_030_150_030_150_000';
+data_ID = '040122_63_79_020_10000_020_016_030_150_030_150_000';
 % mouse_ID = 'Box_4_F_081921_CT_EMG'; %'Box_4_M_012121_CT_video'; %'Box_4_F_102320_CT'; %Box_4_F_102320_CT'; Box_2_M_012121_CT
 % data_ID = '110721_60_80_050_0300_010_010_000_360_000_360_004';
 condition_array = strsplit(data_ID,'_');
@@ -27,7 +27,7 @@ cd('C:\Users\anaga\Documents\GitHub\Joystick-Analysis\NewCode')
 
 mouse_ID_array = strsplit(mouse_ID,'_');
 
-data_folder = 'D:\JoystickExpts\data\';
+data_folder = 'F:\JoystickExpts\data\';
 mouse_ID = mouse_ID_array{3};
 data_ID = condition_array{1};
 
@@ -79,10 +79,10 @@ r_tri_js_acc_all = [];
 r_a_delt_js_acc_all = [];
 r_p_delt_js_acc_all = [];
 
-index_js_reach = 1:length(js_reach);
-index_EMG = length(EMG_struct)-5:length(EMG_struct);
+index_js_reach = 1:length(js_reach)-2;
+index_EMG = 1:length(EMG_struct);
 
-for i = 1:length(index_js_reach) %nTrial
+for i = 18 %:length(index_js_reach) %nTrial
     j = index_js_reach(i);
     k = index_EMG(i);
     %if isempty(js_reach(i).reach_flag)
@@ -120,13 +120,13 @@ for i = 1:length(index_js_reach) %nTrial
             js_acc_all = [js_acc_all; js_acc];
             
             mag_vel_all = [mag_vel_all; js_reach(j).mag_vel_2(analysis_window_js)];
-            EMG_biceps = EMG_struct(k).biceps_zscore(analysis_window_EMG);
+            EMG_biceps = EMG_struct(k).biceps_raw(analysis_window_EMG);
             EMG_biceps_ds = downsample(EMG_biceps,10);
-            EMG_triceps = EMG_struct(k).triceps_zscore(analysis_window_EMG);
+            EMG_triceps = EMG_struct(k).triceps_raw(analysis_window_EMG);
             EMG_triceps_ds = downsample(EMG_triceps,10);
-            EMG_a_delt = EMG_struct(k).a_delt_zscore(analysis_window_EMG);
+            EMG_a_delt = EMG_struct(k).a_delt_raw(analysis_window_EMG);
             EMG_a_delt_ds = downsample(EMG_a_delt,10);
-            EMG_p_delt = EMG_struct(k).p_delt_zscore(analysis_window_EMG);
+            EMG_p_delt = EMG_struct(k).p_delt_raw(analysis_window_EMG);
             EMG_p_delt_ds = downsample(EMG_p_delt,10);
             
             [r_bi_tri,lags] = xcorr(EMG_biceps-mean(EMG_biceps),EMG_triceps-mean(EMG_triceps),window_size*Fs_EMG/Fs_js,'coeff');
@@ -393,21 +393,19 @@ plot(time_js,mean(radial_pos_all),'LineWidth',2,'color','k')
 yline(hold_threshold,'--','color','k','LineWidth',2)
 yline(outer_threshold,'color','g','LineWidth',2)
 yline(max_distance,'color','g','LineWidth',2)
-ylabel('Radial Postion (mm)')
+ylabel({'Postion','(mm)'})
 subplot(5,1,2)
 plot(time_EMG,mean(EMG_biceps_all),'LineWidth',2,'color','k')
-ylabel('Biceps EMG (V)')
+ylabel({'Biceps EMG','(mV)'})
 subplot(5,1,3)
 plot(time_EMG,mean(EMG_triceps_all),'LineWidth',2,'color','k')
-ylabel('Triceps EMG (V)')
-xlabel('Time (sec)')
+ylabel({'Triceps EMG','(mV)'})
 subplot(5,1,4)
 plot(time_EMG,mean(EMG_a_delt_all),'LineWidth',2,'color','k')
-ylabel('AD EMG (V)')
-xlabel('Time (sec)')
+ylabel({'AD EMG','(mV)'})
 subplot(5,1,5)
 plot(time_EMG,mean(EMG_p_delt_all),'LineWidth',2,'color','k')
-ylabel('PD EMG (V)')
+ylabel({'PD EMG','(mV)'})
 xlabel('Time (sec)')
 
 % figure(2)

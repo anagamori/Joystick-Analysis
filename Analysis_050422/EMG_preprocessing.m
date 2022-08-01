@@ -3,8 +3,8 @@ clear all
 clc
 
 code_path = 'C:\Users\anaga\Documents\GitHub\Joystick-Analysis\Analysis_050422';
-mouse_ID = 'AN08';
-directory_name = uigetdir(['D:\JoystickExpts\data\' mouse_ID '\EMG\']);
+mouse_ID = 'AN639';
+directory_name = uigetdir(['F:\JoystickExpts\data\' mouse_ID '\EMG\']);
 condition_array = strsplit(directory_name,'\');
 session_array = strsplit(condition_array{6},'_');
 cd(directory_name)
@@ -27,11 +27,11 @@ for i = 1:size(file_names,1)
     
     
     data = amplifier_data;
-    data_filt = zeros(size(data));
+    data_filt = zeros(8,size(data,2));
     
     [b,a] = butter(8,[350 7000]/(Fs/2),'bandpass');
     
-    for j = 1:size(data,1)
+    for j = 1:8
         data_filt(j,:) = filtfilt(b,a,data(j,:));
         
         
@@ -44,7 +44,7 @@ end
 time = [1:size(data_all,2)]./Fs;
     idx  = 1;
     idx2 = 1;
-for j = 1:16
+for j = 1:8
     if j <= 8
         figure(1)
         ax{j} = subplot(8,1,idx);
@@ -63,13 +63,13 @@ for j = 1:16
 end
  figure(1)
     linkaxes([ax{1:8}],'x')
-    figure(2)
-    linkaxes([ax{9:16}],'x')
+%     figure(2)
+%     linkaxes([ax{9:16}],'x')
     
 trigger_dif = [0 diff(trigger_all)];
 trigger_onset = find(trigger_dif==-1);
 count_trial = 1;
-for k = 1:length(trigger_onset)
+for k = 20:length(trigger_onset)
     EMG_struct(count_trial).EMG = data_all(:,trigger_onset(k)-buffer_length+1....
         :trigger_onset(k)+recording_length);
     EMG_struct(count_trial).trialN = count_trial-1;
@@ -77,11 +77,11 @@ for k = 1:length(trigger_onset)
     count_trial = count_trial + 1;
 end
 
-save_folder = ['D:\JoystickExpts\data\' mouse_ID '\EMG\' session_array{1}];
+save_folder = ['F:\JoystickExpts\data\' mouse_ID '\EMG\' session_array{1}];
 if ~exist(save_folder,'dir')
     mkdir(save_folder)
 end
 
-% cd(save_folder)
-% save('EMG_struct','EMG_struct')
-% cd(code_path)
+cd(save_folder)
+save('EMG_struct','EMG_struct')
+cd(code_path)

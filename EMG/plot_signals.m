@@ -3,14 +3,14 @@ clear all
 clc
 
 Fs = 10000;
-load('test_050622')
+load('test')
 
 movRMS = dsp.MovingRMS;
 
-signal_ch1 = bi_R.values;
-signal_ch2 = tri_R.values;
-signal_ch3 = tri_L.values;
-signal_ch4 = bi_L.values;
+signal_ch1 = Data2__Stopped__bi_R.values;
+signal_ch2 = Data2__Stopped__tri_R.values;
+signal_ch3 = Data2__Stopped__tri_L.values;
+signal_ch4 = Data2__Stopped__bi_L.values;
 
 rms_ch1 = movRMS(signal_ch1);
 rms_ch2 = movRMS(signal_ch2);
